@@ -5,16 +5,22 @@ import AnimatedBasketball from './AnimatedBasketball';
 const BALL_SIZE = 50;
 const DECAY_FACTOR = 0.995;
 
+interface Coordinates {
+  x: number;
+  y: number;
+}
+
 interface BallComponentProps {
-  startPosition: { x: number; y: number };
+  startPosition: Coordinates;
   containerDimensions: { width: number; height: number };
 }
 
 const BallComponent: React.FC<BallComponentProps> = ({ startPosition, containerDimensions }) => {
-  const velocity = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const velocity = useRef<Coordinates>({ x: 0, y: 0 });
   const isAnimating = useRef(false);
-  const [ballPosition, setBallPosition] = useState<{ x: number; y: number }>(startPosition);
+  const [ballPosition, setBallPosition] = useState<Coordinates>(startPosition);
   const [isMoving, setIsMoving] = useState(false);
+  const previousVelocityMagnitude = useRef(0);
 
   useEffect(() => {
     const angle = Math.random() * 2 * Math.PI;
@@ -24,7 +30,7 @@ const BallComponent: React.FC<BallComponentProps> = ({ startPosition, containerD
     };
     setBallPosition(startPosition);
     setIsMoving(true);
-
+    
     if (!isAnimating.current) {
       isAnimating.current = true;
       requestAnimationFrame(moveBall);
@@ -50,12 +56,17 @@ const BallComponent: React.FC<BallComponentProps> = ({ startPosition, containerD
         velocity.current.y = -velocity.current.y * DECAY_FACTOR;
       }
 
-      velocity.current.x = Math.abs(velocity.current.x) < 0.1 ? 0 : velocity.current.x * DECAY_FACTOR;
-      velocity.current.y = Math.abs(velocity.current.y) < 0.1 ? 0 : velocity.current.y * DECAY_FACTOR;
+      velocity.current.x *= Math.abs(velocity.current.x) < 0.1 ? 0 : DECAY_FACTOR;
+      velocity.current.y *= Math.abs(velocity.current.y) < 0.1 ? 0 : DECAY_FACTOR;
 
-      const isBallStillMoving = Math.abs(velocity.current.x) > 0.1 || Math.abs(velocity.current.y) > 0.1;
+      const currentVelocityMagnitude = Math.sqrt(velocity.current.x ** 2 + velocity.current.y ** 2);
+      const isBallStillMoving = currentVelocityMagnitude > 0.1;
+      const hasSignificantChange = Math.abs(currentVelocityMagnitude - previousVelocityMagnitude.current) >= previousVelocityMagnitude.current * 0.2;
 
       if (isBallStillMoving) {
+        if (hasSignificantChange) {
+          previousVelocityMagnitude.current = currentVelocityMagnitude;
+        }
         return { x: newX, y: newY };
       } else {
         isAnimating.current = false;
@@ -71,7 +82,14 @@ const BallComponent: React.FC<BallComponentProps> = ({ startPosition, containerD
 
   return (
     <View style={[styles.ball, { left: ballPosition.x, top: ballPosition.y }]}>
-      <AnimatedBasketball startX={0} startY={0} endX={0} endY={0} isMoving={isMoving} />
+      <AnimatedBasketball
+        startX={0}
+        startY={0}
+        endX={0}
+        endY={0}
+        isMoving={isMoving}
+        velocity={previousVelocityMagnitude.current}
+      />
     </View>
   );
 };

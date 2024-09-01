@@ -1,9 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, ScrollView, Animated, GestureResponderEvent } from 'react-native';
+import { StyleSheet, ScrollView, Animated, GestureResponderEvent, Vibration } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { TheStoryText } from '@/components/TheStoryText';
 import { ThemedText } from '@/components/ThemedText';
 import BallComponent from '@/components/animation/ball';
+
+// Optional configuration
+const options = {
+  enableVibrateFallback: true,
+  ignoreAndroidSystemSettings: false,
+};
 
 const HomeScreen: React.FC = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -29,6 +35,16 @@ const HomeScreen: React.FC = () => {
 
   const handleBallStart = (evt: GestureResponderEvent) => {
     const { locationX, locationY } = evt.nativeEvent;
+    // Обновляем позицию мяча и состояние
+    setBallPosition({ x: locationX - 25, y: locationY - 25 });
+    setIsBallMoving(true);
+  };
+
+  const handleResponderGrant = (evt: GestureResponderEvent) => {
+    // Trigger haptic feedback
+    Vibration.vibrate([500]); // Настроить вибрацию
+    const { locationX, locationY } = evt.nativeEvent; // Местоположение события
+    // Обновляем позицию мяча и состояние
     setBallPosition({ x: locationX - 25, y: locationY - 25 });
     setIsBallMoving(true);
   };
@@ -42,7 +58,7 @@ const HomeScreen: React.FC = () => {
     <ThemedView 
       style={styles.container} 
       onStartShouldSetResponder={() => true} 
-      onResponderRelease={handleBallStart}
+      onResponderGrant={handleResponderGrant}
       onLayout={handleLayout}
     >
       {isBallMoving && <BallComponent startPosition={ballPosition} containerDimensions={containerDimensions} />}

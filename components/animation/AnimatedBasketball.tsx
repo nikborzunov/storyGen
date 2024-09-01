@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Image, ViewStyle } from 'react-native';
+import { View, Image, ViewStyle } from 'react-native';
 
 interface AnimatedBasketballProps {
     startX: number;
@@ -7,29 +7,41 @@ interface AnimatedBasketballProps {
     endX: number;
     endY: number;
     isMoving: boolean;
+    velocity: number;
 }
 
 const spriteWidth = 200; 
 const spriteHeight = 140; 
 const ballWidth = spriteWidth / 3; 
 const ballHeight = spriteHeight / 2; 
-const totalFrames = 6; 
+const totalFrames = 6;
 
-const AnimatedBasketball: React.FC<AnimatedBasketballProps> = ({ startX, startY, endX, endY, isMoving }) => {
+const cubicEaseOut = (t: number) => t * t * (3 - 2 * t);
+
+const AnimatedBasketball: React.FC<AnimatedBasketballProps> = ({ startX, startY, endX, endY, isMoving, velocity }) => {
     const [frame, setFrame] = useState(0);
     const ref = useRef<View>(null);
     const animationRef = useRef<number | null>(null);
+    const startTimeRef = useRef<number | null>(null);
+    const duration = Math.max(1000 / (velocity + 1), 200);
 
     useEffect(() => {
-        const duration = 2000;
-        let startTime = performance.now();
+        if (!isMoving) {
+            setFrame(0);
+            return;
+        }
 
         const animateBall = (currentTime: number) => {
-            const elapsedTime = currentTime - startTime;
+            if (startTimeRef.current === null) {
+                startTimeRef.current = currentTime;
+            }
+            
+            const elapsedTime = currentTime - (startTimeRef.current || 0);
             const progress = Math.min(elapsedTime / duration, 1);
+            const easedProgress = cubicEaseOut(progress);
 
-            const currentX = startX + (endX - startX) * progress;
-            const currentY = startY + (endY - startY) * progress;
+            const currentX = startX + (endX - startX) * easedProgress;
+            const currentY = startY + (endY - startY) * easedProgress;
 
             if (ref.current) {
                 ref.current.setNativeProps({
@@ -45,27 +57,21 @@ const AnimatedBasketball: React.FC<AnimatedBasketballProps> = ({ startX, startY,
             if (elapsedTime < duration) {
                 animationRef.current = requestAnimationFrame(animateBall);
             } else {
-                startTime = currentTime;
-                animationRef.current = requestAnimationFrame(animateBall);
+                startTimeRef.current = null; // Reset for the next cycle
+                setFrame(0); // Reset to the first frame for the next cycle
+                animationRef.current = requestAnimationFrame(animateBall); // Restart animation
             }
         };
 
-        if (isMoving) {
-            animationRef.current = requestAnimationFrame(animateBall);
-        }
+        animationRef.current = requestAnimationFrame(animateBall);
 
         return () => {
+            startTimeRef.current = null; // Clean up
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
         };
-    }, [startX, startY, endX, endY, isMoving]);
-
-    useEffect(() => {
-        if (!isMoving) {
-            setFrame(0);
-        }
-    }, [isMoving]);
+    }, [startX, startY, endX, endY, isMoving, duration, velocity]);
 
     const frameStyle: ViewStyle = {
         width: ballWidth,
@@ -77,16 +83,19 @@ const AnimatedBasketball: React.FC<AnimatedBasketballProps> = ({ startX, startY,
         overflow: 'hidden',
     };
 
+    const columnFrame = frame % 3;
+    const rowFrame = Math.floor(frame / 3);
+
     return (
         <View style={frameStyle} ref={ref}>
             <Image
-                source={require('../../assets/sprites/basketball-ball.png')}
+                source={require('../../assets/sprites/basketball-ball-cropped.png')}
                 style={{
                     width: spriteWidth,
                     height: spriteHeight,
                     position: 'absolute',
-                    left: -(frame % 3) * ballWidth,
-                    top: -Math.floor(frame / 3) * ballHeight,
+                    left: -columnFrame * ballWidth,
+                    top: -rowFrame * ballHeight,
                 }}
             />
         </View>
