@@ -3,11 +3,12 @@ import { Animated, TouchableOpacity, StyleSheet } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 
 interface FairytaleButtonProps {
+    customText?: string;
     onPress: () => void;
     disabled?: boolean; 
 }
 
-const FairytaleButton: React.FC<FairytaleButtonProps> = ({ onPress, disabled = false }) => {
+const FairytaleButton: React.FC<FairytaleButtonProps> = ({ customText, onPress, disabled = false }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handlePressIn = () => {
@@ -26,6 +27,8 @@ const FairytaleButton: React.FC<FairytaleButtonProps> = ({ onPress, disabled = f
         }).start();
     };
 
+    const text = disabled ? 'Подождите...' : customText || 'Новая Сказка';
+
     return (
         <TouchableOpacity
             onPressIn={handlePressIn}
@@ -35,7 +38,7 @@ const FairytaleButton: React.FC<FairytaleButtonProps> = ({ onPress, disabled = f
             activeOpacity={0.7}
         >
             <Animated.View style={[styles.button, { transform: [{ scale: scaleAnim }] }]}>
-                <ThemedText style={styles.buttonText}>{disabled ? 'Подождите...' : 'Новая Сказка'}</ThemedText>
+                <ThemedText style={styles.buttonText}>{text}</ThemedText>
             </Animated.View>
         </TouchableOpacity>
     );

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Image, ViewStyle, Text } from 'react-native';
+import { View, Image, ViewStyle } from 'react-native';
 
 interface AnimatedBasketballProps {
     startX: number;

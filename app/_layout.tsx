@@ -19,6 +19,7 @@ export default function RootLayout() {
     'A.AlleycatICG.Alen_.Rus_': require('./../assets/fonts/A.AlleycatICG.Alen_.Rus_.ttf'),
     'lombardina-initial-two': require('./../assets/fonts/lombardina-initial-two.ttf'),
     'ofont.ru_Palatino-Normal': require('./../assets/fonts/ofont.ru_Palatino-Normal.ttf'),
+    'VezitsaCyrillic': require('./../assets/fonts/VezitsaCyrillic.ttf'),
   });
 
   useEffect(() => {
