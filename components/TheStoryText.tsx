@@ -2,66 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 
-interface StoryData {
-  data: string;
+interface TheStoryTextProps {
+  fairytaleText: string; // Убедитесь, что пропс принимает строку
 }
 
-export const TheStoryText: React.FC = () => {
-  const [fairytaleText, setFairytaleText] = useState<string | null>(null);
+const TheStoryText: React.FC<TheStoryTextProps> = ({ fairytaleText }) => {
   const [displayedText, setDisplayedText] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      const URL = `http://192.168.0.103:1001/story/create`;
-
-      try {
-        const response = await fetch(URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            themeOfStory: 'Два лисенка',
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Сетевой ответ не был успешным');
-        }
-
-        const data: StoryData = await response.json();
-        
-        if (data && typeof data.data === 'string') {
-          setFairytaleText(data.data);
-        } else {
-          throw new Error('Ожидалось поле "data" с текстом, но его нет или оно неверного типа');
-        }
-      } catch (error) {
-        console.error('Ошибка при запросе:', (error as Error).message);
-        setError((error as Error).message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (fairytaleText && currentIndex < fairytaleText.length) {
+    if (fairytaleText && currentIndex < fairytaleText.length && !isPaused) {
+      // Запускаем интервал только при наличии текста и когда не приостановлено
       interval = setInterval(() => {
-        if (!isPaused) {
-          setDisplayedText(prev => prev + fairytaleText[currentIndex]);
-          setCurrentIndex(prevIndex => prevIndex + 1);
-        }
+        setDisplayedText(prev => prev + fairytaleText[currentIndex]);
+        setCurrentIndex(prevIndex => prevIndex + 1);
       }, 100);
     }
 
@@ -70,22 +27,14 @@ export const TheStoryText: React.FC = () => {
         clearInterval(interval);
       }
     };
-  }, [fairytaleText, isPaused, currentIndex]);
+  }, [fairytaleText, currentIndex, isPaused]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return <ThemedText style={styles.errorText}>{error}</ThemedText>;
-  }
+  const togglePause = () => {
+    setIsPaused(prev => !prev);
+  };
 
   return (
-    <TouchableWithoutFeedback onPress={() => setIsPaused(prev => !prev)}> 
+    <TouchableWithoutFeedback onPress={togglePause}>
       <View style={styles.storyTextContainer}>
         <ThemedText style={styles.storyText}>{displayedText}</ThemedText>
         <ThemedText style={isPaused ? styles.resumeText : styles.pauseText}>
@@ -94,20 +43,9 @@ export const TheStoryText: React.FC = () => {
       </View>
     </TouchableWithoutFeedback>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  errorText: {
-    fontSize: 18,
-    color: 'red',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
   storyTextContainer: {
     marginTop: 10,
     padding: 15,
@@ -117,7 +55,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#333',
     textAlign: 'justify',
-    fontFamily: 'ofont.ru_Palatino-Normal'
+    fontFamily: 'ofont.ru_Palatino-Normal',
   },
   pauseText: {
     fontSize: 16,
