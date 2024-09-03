@@ -102,11 +102,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   title: {
-    fontSize: 50,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#DAA520',
     textAlign: 'center',
-    lineHeight: 60,
+    lineHeight: 40,
     fontFamily: 'VezitsaCyrillic',
   },
   storyContainer: {
