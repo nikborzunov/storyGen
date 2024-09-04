@@ -1,3 +1,13 @@
+import BallComponent from '@/src/components/animation/ball';
+import FairytaleButton from '@/src/components/buttons/FairytaleButton';
+import ErrorView from '@/src/components/errors/errorView';
+import LoaderView from '@/src/components/loaders/loaderView';
+import { ThemedText } from '@/src/components/ThemedText';
+import { ThemedView } from '@/src/components/ThemedView';
+import TheStoryText from '@/src/components/TheStoryText';
+import { useAppDispatch, useAppSelector } from '@/src/hooks/redux';
+import { useStoryFetch } from '@/src/hooks/useStoryFetch';
+import { storySlice } from '@/src/store/reducers/StorySlice';
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   StyleSheet,
@@ -5,14 +15,7 @@ import {
   Animated,
   Vibration,
 } from 'react-native';
-import { ThemedView } from '@/components/ThemedView';
-import { ThemedText } from '@/components/ThemedText';
-import BallComponent from '@/components/animation/ball';
-import TheStoryText from '@/components/TheStoryText';
-import FairytaleButton from '@/components/buttons/FairytaleButton';
-import LoaderView from '@/components/loaders/loaderView';
-import ErrorView from '@/components/errors/errorView';
-import { useStoryFetch } from '@/hooks/useStoryFetch';
+
 
 const HomeScreen: React.FC = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -21,8 +24,15 @@ const HomeScreen: React.FC = () => {
   const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
   const [isBallMoving, setIsBallMoving] = useState(false);
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
+  
+  const dispatch = useAppDispatch();
+  const { addStoryToStore } = storySlice.actions;
 
   const { isLoading, error, title, fairytaleText, fetchData, canRequestNewStory } = useStoryFetch();
+
+  useEffect(() => {
+    dispatch(addStoryToStore({ title: title, content: fairytaleText }));
+  }, [title, fairytaleText])
 
   const animateTitleAndFetchData = () => {
 
@@ -82,7 +92,7 @@ const HomeScreen: React.FC = () => {
         <ThemedText style={styles.title}>{title}</ThemedText>
       </Animated.View>
       <ScrollView contentContainerStyle={styles.storyContainer}>
-        <TheStoryText fairytaleText={fairytaleText} />
+        <TheStoryText/>
       </ScrollView>
       <FairytaleButton onPress={handleNewStoryRequest} disabled={!canRequestNewStory} />
     </ThemedView>

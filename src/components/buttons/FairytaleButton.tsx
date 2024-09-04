@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Animated, TouchableOpacity, StyleSheet } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
+import { ThemedText } from '@/src/components/ThemedText';
 
 interface FairytaleButtonProps {
     customText?: string;

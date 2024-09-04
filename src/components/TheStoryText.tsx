@@ -1,20 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
+import { ThemedText } from '@/src/components/ThemedText';
+import { useAppSelector } from '../hooks/redux';
 
-interface TheStoryTextProps {
-  fairytaleText: string; // Убедитесь, что пропс принимает строку
-}
-
-const TheStoryText: React.FC<TheStoryTextProps> = ({ fairytaleText }) => {
+const TheStoryText: React.FC = () => {
   const [displayedText, setDisplayedText] = useState<string>('');
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
+  const library = useAppSelector(state => state?.story?.library);
+  const lastStoryIndex = library?.length -1
+  const fairytaleText = library?.[lastStoryIndex]?.content
+
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (fairytaleText && currentIndex < fairytaleText.length && !isPaused) {
+    if (fairytaleText?.length && currentIndex < fairytaleText.length && !isPaused) {
       // Запускаем интервал только при наличии текста и когда не приостановлено
       interval = setInterval(() => {
         setDisplayedText(prev => prev + fairytaleText[currentIndex]);
@@ -27,7 +28,7 @@ const TheStoryText: React.FC<TheStoryTextProps> = ({ fairytaleText }) => {
         clearInterval(interval);
       }
     };
-  }, [fairytaleText, currentIndex, isPaused]);
+  }, [fairytaleText, currentIndex, isPaused, library?.length]);
 
   const togglePause = () => {
     setIsPaused(prev => !prev);

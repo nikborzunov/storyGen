@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import SelectBox from '@/components/buttons/selects/SelectBox';
-import ToggleSwitch from '@/components/buttons/toggles/ToggleSwitch';
+import { ThemedText } from '@/src/components/ThemedText';
+import { ThemedView } from '@/src/components/ThemedView';
+import SelectBox from '@/src/components/buttons/selects/SelectBox';
+import ToggleSwitch from '@/src/components/buttons/toggles/ToggleSwitch';
 import { useNavigation } from '@react-navigation/native';
 
 interface SelectOption {

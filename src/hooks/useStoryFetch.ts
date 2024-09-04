@@ -1,4 +1,4 @@
-import { logger } from '@/helpers/logger';
+import { logger } from '@/src/helpers/logger';
 import { useCallback, useState } from 'react';
 
 interface StoryData {

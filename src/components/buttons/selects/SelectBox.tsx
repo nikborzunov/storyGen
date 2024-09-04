@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, FlatList, Modal } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
+import { ThemedText } from '@/src/components/ThemedText';
 import Svg, { Path } from 'react-native-svg';
 import { MaterialIcons } from '@expo/vector-icons';
 
