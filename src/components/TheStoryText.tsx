@@ -16,7 +16,6 @@ const TheStoryText: React.FC = () => {
     let interval: NodeJS.Timeout | null = null;
 
     if (fairytaleText?.length && currentIndex < fairytaleText.length && !isPaused) {
-      // Запускаем интервал только при наличии текста и когда не приостановлено
       interval = setInterval(() => {
         setDisplayedText(prev => prev + fairytaleText[currentIndex]);
         setCurrentIndex(prevIndex => prevIndex + 1);

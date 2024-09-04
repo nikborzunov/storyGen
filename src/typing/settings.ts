@@ -1,0 +1,1 @@
+export type ISelectOption = { name: string, value: string, checked?: boolean };

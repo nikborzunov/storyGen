@@ -5,9 +5,9 @@ import LoaderView from '@/src/components/loaders/loaderView';
 import { ThemedText } from '@/src/components/ThemedText';
 import { ThemedView } from '@/src/components/ThemedView';
 import TheStoryText from '@/src/components/TheStoryText';
-import { useAppDispatch, useAppSelector } from '@/src/hooks/redux';
+import { useAppDispatch } from '@/src/hooks/redux';
 import { useStoryFetch } from '@/src/hooks/useStoryFetch';
-import { storySlice } from '@/src/store/reducers/StorySlice';
+import { addStoryToHistory, addStoryToLibrary } from '@/src/store/reducers/StorySlice';
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   StyleSheet,
@@ -26,12 +26,14 @@ const HomeScreen: React.FC = () => {
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   
   const dispatch = useAppDispatch();
-  const { addStoryToStore } = storySlice.actions;
 
   const { isLoading, error, title, fairytaleText, fetchData, canRequestNewStory } = useStoryFetch();
 
   useEffect(() => {
-    dispatch(addStoryToStore({ title: title, content: fairytaleText }));
+    if (title?.length && fairytaleText?.length) {
+      dispatch(addStoryToLibrary({ title: title, content: fairytaleText }));
+      dispatch(addStoryToHistory(title));
+    };
   }, [title, fairytaleText])
 
   const animateTitleAndFetchData = () => {

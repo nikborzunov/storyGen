@@ -1,8 +1,10 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import storyReducer from './reducers/StorySlice';
+import settingsReducer from './reducers/SettingsSlice'
 
 const rootReducer = combineReducers({
-	story: storyReducer
+	story: storyReducer,
+	settings: settingsReducer
 });
 
 export const setupStore = () => {
