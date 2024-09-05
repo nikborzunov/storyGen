@@ -14,7 +14,7 @@ interface SelectBoxProps {
   name?: string;
   options: ISelectOption[];
   selected: ISelectOption[];
-  onSelect: (selected: ISelectOption[]) => void;
+  onSelect: (selected: ISelectOption[] | ISelectOption) => void;
   itemType?: 'link' | 'checkbox';
   emptyOptionsPlaceholder?: string;
 }
@@ -39,7 +39,7 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
       const newSelected = isSelected ? selected.filter(item => item.value !== option.value) : [...selected, { ...option, checked: true }];
       onSelect(newSelected);
     } else {
-      onSelect([option]);
+      onSelect(option);
       setListVisible(false);
     }
   }, [itemType, selected, onSelect]);

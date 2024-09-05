@@ -1,25 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
-import { useAppSelector } from '../hooks/redux';
+import { useAppSelector } from '@/src/hooks/redux';
 
-const TheStoryText: React.FC = () => {
+const TheStoryText: React.FC<{ contentFromHistory: string | undefined }> = ({ contentFromHistory }) => {
   const [displayedText, setDisplayedText] = useState<string>('');
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
   const library = useAppSelector(state => state?.story?.library);
-  const lastStoryIndex = library?.length -1
-  const fairytaleText = library?.[lastStoryIndex]?.content
+  const lastStoryIndex = library?.length - 1;
+  const fairytaleText = useRef(library?.[lastStoryIndex]?.content);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
-    if (fairytaleText?.length && currentIndex < fairytaleText.length && !isPaused) {
+    if (contentFromHistory?.length) {
+      if (fairytaleText?.current !== contentFromHistory) {
+        fairytaleText.current = contentFromHistory;
+        setCurrentIndex(contentFromHistory?.length);
+      };
+
+      setDisplayedText(contentFromHistory);
+    };
+
+    if (fairytaleText?.current?.length && currentIndex < fairytaleText?.current?.length && !isPaused) {
       interval = setInterval(() => {
-        setDisplayedText(prev => prev + fairytaleText[currentIndex]);
+        setDisplayedText(prev => prev + fairytaleText?.current[currentIndex]);
         setCurrentIndex(prevIndex => prevIndex + 1);
       }, 100);
+
+      if (currentIndex > fairytaleText?.current?.length) {
+        setIsPaused(true);
+      };
     }
 
     return () => {
@@ -27,11 +40,11 @@ const TheStoryText: React.FC = () => {
         clearInterval(interval);
       }
     };
-  }, [fairytaleText, currentIndex, isPaused, library?.length]);
+  }, [fairytaleText, currentIndex, isPaused, contentFromHistory?.length]);
 
-  const togglePause = () => {
+  const togglePause = useCallback(() => {
     setIsPaused(prev => !prev);
-  };
+  }, [currentIndex]);
 
   return (
     <TouchableWithoutFeedback onPress={togglePause}>
@@ -71,4 +84,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TheStoryText;
+const MemoizedTheStoryText = React.memo(TheStoryText);
+export default MemoizedTheStoryText;

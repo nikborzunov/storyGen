@@ -73,8 +73,8 @@ const AnimatedBasketball: React.FC<AnimatedBasketballProps> = ({ startX, startY,
               cancelAnimationFrame(animationRef.current);
           }
       };
-  }, [startX, startY, endX, endY, isMoving, nextVelocity, duration]); 
-
+    }, [startX, startY, endX, endY, isMoving, nextVelocity, duration]); 
+  
     useEffect(() => {
         if (!isMoving) {
             setFrame(0);

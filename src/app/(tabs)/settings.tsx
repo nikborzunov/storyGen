@@ -18,7 +18,7 @@ const Settings: React.FC = () => {
   const [isHistorySizeEnabled, setIsHistorySizeEnabled] = useState(false);
   
   const [selectedTheme, setSelectedTheme] = useState<ISelectOption[]>([]);
-  const [selectedHistory, setSelectedHistory] = useState<ISelectOption[]>([]);
+  const [selectedHistory, setSelectedHistory] = useState<ISelectOption | null>(null);
 
   const navigation = useNavigation<any>();
 
@@ -26,6 +26,16 @@ const Settings: React.FC = () => {
 
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
   const history = useAppSelector(state => state?.story?.history);
+  const library = useAppSelector(state => state?.story?.library);
+
+  const titleOfStoryFromHistory = library?.find((item) => item?.title === selectedHistory?.name)?.title
+
+  useEffect(() => {
+    if (selectedHistory) {
+      navigation.navigate('index', { titleOfStoryFromHistory });
+      setSelectedHistory(null);
+    }
+  }, [selectedHistory, navigation]);
 
   useEffect(() => {
     dispatch(chooseStoryTheme(selectedTheme));

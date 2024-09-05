@@ -15,6 +15,11 @@ import {
   Animated,
   Vibration,
 } from 'react-native';
+import { RouteProp, useRoute } from '@react-navigation/native';
+
+type RootStackParamList = {
+  HomeScreen: { titleOfStoryFromHistory: string };
+};
 
 const HomeScreen: React.FC = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -24,9 +29,15 @@ const HomeScreen: React.FC = () => {
   const [isBallMoving, setIsBallMoving] = useState(false);
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [title, setTitle] = useState('');
+  const [contentFromHistory, setContentFromHistory] = useState<string | undefined>('');
   const [fetching, setFetching] = useState(false);
 
+  const route = useRoute<RouteProp<RootStackParamList, 'HomeScreen'>>();
+  const titleOfStoryFromHistory = route.params?.titleOfStoryFromHistory;
+
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
+
+  const library = useAppSelector(state => state?.story?.library);
 
   const themes: string[] = [];
 
@@ -44,6 +55,18 @@ const HomeScreen: React.FC = () => {
       setFetching(false);
     };
   }, [isLoading, story])
+
+
+  useEffect(() => {
+    if (titleOfStoryFromHistory) {
+      const storyFromHistory = library?.find((item) => item.title === titleOfStoryFromHistory);
+
+      if (storyFromHistory) {
+        setTitle(storyFromHistory.title);
+        setContentFromHistory(storyFromHistory.content);
+      }
+    }
+  }, [route?.params]);
 
   const animateTitleAndFetchData = () => {
 
@@ -68,6 +91,7 @@ const HomeScreen: React.FC = () => {
   const handleNewStoryRequest = async () => {
   
     setFetching(true);
+    setContentFromHistory(undefined);
     
     try {
       await fetchStories(themes).unwrap();
@@ -115,7 +139,7 @@ const HomeScreen: React.FC = () => {
       }
       {title ? 
       <ScrollView contentContainerStyle={styles.storyContainer}>
-        <TheStoryText/>
+        <TheStoryText contentFromHistory={contentFromHistory} />
       </ScrollView>
     :
       <LottieView
