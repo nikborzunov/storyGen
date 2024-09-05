@@ -5,17 +5,16 @@ import LoaderView from '@/src/components/loaders/loaderView';
 import { ThemedText } from '@/src/components/ThemedText';
 import { ThemedView } from '@/src/components/ThemedView';
 import TheStoryText from '@/src/components/TheStoryText';
-import { useAppDispatch } from '@/src/hooks/redux';
-import { useStoryFetch } from '@/src/hooks/useStoryFetch';
-import { addStoryToHistory, addStoryToLibrary } from '@/src/store/reducers/StorySlice';
-import React, { useEffect, useState, useCallback } from 'react';
+import { useAppSelector } from '@/src/hooks/redux';
+import { storyAPI } from '@/src/services/StoryServis';
+import LottieView from 'lottie-react-native';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
   Animated,
   Vibration,
 } from 'react-native';
-
 
 const HomeScreen: React.FC = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -24,17 +23,27 @@ const HomeScreen: React.FC = () => {
   const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
   const [isBallMoving, setIsBallMoving] = useState(false);
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
-  
-  const dispatch = useAppDispatch();
+  const [title, setTitle] = useState('');
+  const [fetching, setFetching] = useState(false);
 
-  const { isLoading, error, title, fairytaleText, fetchData, canRequestNewStory } = useStoryFetch();
+  const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
+
+  const themes: string[] = [];
+
+  selectedThemesFromStore?.forEach((item) => {
+    if (item?.checked) {
+      themes.push(item?.name);
+    }
+  });
+
+  const [fetchStories, { data: story, isLoading, error }] = storyAPI.useLazyFetchAllStoriesQuery();
 
   useEffect(() => {
-    if (title?.length && fairytaleText?.length) {
-      dispatch(addStoryToLibrary({ title: title, content: fairytaleText }));
-      dispatch(addStoryToHistory(title));
+    if (story?.data?.title?.length) {
+      setTitle(story?.data?.title.replace(/^"|"$/g, ''));
+      setFetching(false);
     };
-  }, [title, fairytaleText])
+  }, [isLoading, story])
 
   const animateTitleAndFetchData = () => {
 
@@ -42,8 +51,6 @@ const HomeScreen: React.FC = () => {
       Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
     ]).start();
-
-    fetchData();
   };
 
   useEffect(() => {
@@ -58,11 +65,18 @@ const HomeScreen: React.FC = () => {
     animateTitleAndFetchData();
   }, []);
 
-  const handleNewStoryRequest = useCallback(() => {
-    if (canRequestNewStory) {
-      fetchData();
+  const handleNewStoryRequest = async () => {
+  
+    setFetching(true);
+    
+    try {
+      await fetchStories(themes).unwrap();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setFetching(false);
     }
-  }, [fetchData, canRequestNewStory]);
+  };
 
   const handleBallMovement = ({ nativeEvent: { locationX, locationY } }: { nativeEvent: { locationX: number, locationY: number } }) => {
     Vibration.vibrate(500);
@@ -74,13 +88,13 @@ const HomeScreen: React.FC = () => {
     setContainerDimensions({ width: layout.width, height: layout.height });
   };
 
-  if (isLoading) {
+  if (isLoading || fetching) {
     return <LoaderView/>;
   }
 
-  if (error && !title && !fairytaleText) {
-    return <ErrorView onRetry={fetchData} />;
-  }
+  if (error && !title) {
+    return <ErrorView onRetry={handleNewStoryRequest} />;
+  };
 
   return (
     <ThemedView
@@ -90,13 +104,32 @@ const HomeScreen: React.FC = () => {
       onLayout={handleLayout}
     >
       {isBallMoving && <BallComponent startPosition={ballPosition} containerDimensions={containerDimensions} />}
-      <Animated.View style={[styles.titleContainer, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-        <ThemedText style={styles.title}>{title}</ThemedText>
-      </Animated.View>
+      {!title ? 
+        <Animated.View style={styles.emptyTitleContainer}>
+          <ThemedText style={styles.emptyTitle}>{'Хочешь сказку?'}</ThemedText>
+        </Animated.View>
+      :
+        <Animated.View style={styles.titleContainer}>
+          <ThemedText style={styles.title}>{title}</ThemedText>
+        </Animated.View>
+      }
+      {title ? 
       <ScrollView contentContainerStyle={styles.storyContainer}>
         <TheStoryText/>
       </ScrollView>
-      <FairytaleButton onPress={handleNewStoryRequest} disabled={!canRequestNewStory} />
+    :
+      <LottieView
+        source={require('../../assets/lottie/book_switch_pages.json')}
+        autoPlay
+        loop
+        style={styles.loaderAnimation}
+      />
+      }
+      {title ?
+        <FairytaleButton onPress={handleNewStoryRequest} disabled={isLoading || fetching} />
+        :
+        <FairytaleButton customText={'Хочу'}  onPress={handleNewStoryRequest} disabled={isLoading || fetching} />
+      }
     </ThemedView>
   );
 };
@@ -110,7 +143,12 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  emptyTitleContainer: {
+    alignItems: 'center',
+    marginTop: 100,
     marginBottom: 10,
   },
   title: {
@@ -119,6 +157,14 @@ const styles = StyleSheet.create({
     color: '#DAA520',
     textAlign: 'center',
     lineHeight: 40,
+    fontFamily: 'VezitsaCyrillic',
+  },
+  emptyTitle: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#DAA520',
+    textAlign: 'center',
+    lineHeight: 50,
     fontFamily: 'VezitsaCyrillic',
   },
   storyContainer: {
@@ -130,6 +176,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+  },
+  loaderAnimation: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
   },
 });
 

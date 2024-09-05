@@ -1,11 +1,11 @@
 import React, { useRef } from 'react';
-import { Animated, TouchableOpacity, StyleSheet } from 'react-native';
+import { Animated, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 
 interface FairytaleButtonProps {
     customText?: string;
     onPress: () => void;
-    disabled?: boolean; 
+    disabled?: boolean;
 }
 
 const FairytaleButton: React.FC<FairytaleButtonProps> = ({ customText, onPress, disabled = false }) => {
@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 20,
         elevation: 5,
+        minWidth: 80,
     },
     buttonText: {
         fontSize: 20,

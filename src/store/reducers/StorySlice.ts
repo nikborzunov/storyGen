@@ -3,11 +3,15 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface StoryState {
   library: IStory[];
   history: IHistoryItem[];
+	isLoading: boolean;
+	error: string;
 }
 
 const initialState: StoryState = {
   library: [],
-  history: []
+  history: [],
+	isLoading: false,
+	error: '',
 };
 
 export const storySlice = createSlice({
@@ -27,10 +31,29 @@ export const storySlice = createSlice({
         const length = state.history.length + 1;
         state.history.push({ name: action.payload, value: String(length) });
       }
-    }
+    },
+		storiesFetching(state) {
+			state.isLoading = true;
+		},
+		storiesFetchingSuccess(state, action: PayloadAction<IStory>) {
+
+			const isAlreadyExists = state.history.some(historyItem => historyItem.name === action.payload.title);
+
+			state.isLoading = false;
+			state.error = '';
+			if (!isAlreadyExists && action.payload?.title.length) {
+        const length = state.history.length + 1;
+        state.history.push({ name: action.payload?.title, value: String(length) });
+				state.library.push(action.payload);
+      }
+		},
+		storiesFetchingError(state, action: PayloadAction<string>) {
+			state.isLoading = false;
+			state.error = action.payload;
+		},
   }
 });
 
 export default storySlice.reducer;
 
-export const { addStoryToLibrary, addStoryToHistory } = storySlice.actions;
+export const { addStoryToLibrary, addStoryToHistory, storiesFetching, storiesFetchingSuccess, storiesFetchingError } = storySlice.actions;
