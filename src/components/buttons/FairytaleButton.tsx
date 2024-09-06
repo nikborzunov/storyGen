@@ -6,9 +6,10 @@ interface FairytaleButtonProps {
     customText?: string;
     onPress: () => void;
     disabled?: boolean;
+    blocked?: boolean;
 }
 
-const FairytaleButton: React.FC<FairytaleButtonProps> = ({ customText, onPress, disabled = false }) => {
+const FairytaleButton: React.FC<FairytaleButtonProps> = ({ customText, onPress, disabled = false, blocked = false }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handlePressIn = () => {
@@ -27,14 +28,22 @@ const FairytaleButton: React.FC<FairytaleButtonProps> = ({ customText, onPress, 
         }).start();
     };
 
-    const text = disabled ? 'Подождите...' : customText || 'Новая Сказка';
+    let text;
+
+    if (blocked) {
+        text = 'Кнопка заблокирована';
+    } else if (disabled) {
+        text = 'Подождите...';
+    } else {
+        text = customText || 'Новая Сказка';
+    };
 
     return (
         <TouchableOpacity
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
-            onPress={!disabled ? onPress : undefined}
-            disabled={disabled}
+            onPress={!(disabled || blocked) ? onPress : undefined}
+            disabled={disabled || blocked}
             activeOpacity={0.7}
         >
             <Animated.View style={[styles.button, { transform: [{ scale: scaleAnim }] }]}>

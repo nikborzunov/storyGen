@@ -36,6 +36,10 @@ const HomeScreen: React.FC = () => {
   const titleOfStoryFromHistory = route.params?.titleOfStoryFromHistory;
 
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
+  const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
+  const isDarkMode = toggleConfig['darkMode']?.checked;
+  const isGameMode = toggleConfig['gameMode']?.checked;
+  const isScreenBlocked = toggleConfig['blockScreen']?.checked;
 
   const library = useAppSelector(state => state?.story?.library);
 
@@ -69,7 +73,6 @@ const HomeScreen: React.FC = () => {
   }, [route?.params]);
 
   const animateTitleAndFetchData = () => {
-
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
       Animated.timing(scaleAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
@@ -77,7 +80,6 @@ const HomeScreen: React.FC = () => {
   };
 
   useEffect(() => {
-
     Animated.loop(
       Animated.sequence([
         Animated.timing(blinkAnim, { toValue: 0.5, duration: 1000, useNativeDriver: true }),
@@ -89,12 +91,12 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   const handleNewStoryRequest = async () => {
-  
+    if (isScreenBlocked) return;
     setFetching(true);
     setContentFromHistory(undefined);
     
     try {
-      await fetchStories(themes).unwrap();
+      await fetchStories({themes: themes}).unwrap();
     } catch (e) {
       console.error(e);
     } finally {
@@ -103,6 +105,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleBallMovement = ({ nativeEvent: { locationX, locationY } }: { nativeEvent: { locationX: number, locationY: number } }) => {
+    if (!isGameMode) return; 
     Vibration.vibrate(500);
     setBallPosition({ x: locationX - 25, y: locationY - 25 });
     setIsBallMoving(true);
@@ -111,6 +114,8 @@ const HomeScreen: React.FC = () => {
   const handleLayout = ({ nativeEvent: { layout } }: { nativeEvent: { layout: { width: number, height: number } } }) => {
     setContainerDimensions({ width: layout.width, height: layout.height });
   };
+
+  const styles = getStyles(isDarkMode);
 
   if (isLoading || fetching) {
     return <LoaderView/>;
@@ -123,11 +128,11 @@ const HomeScreen: React.FC = () => {
   return (
     <ThemedView
       style={styles.container}
-      onStartShouldSetResponder={() => true}
-      onResponderGrant={handleBallMovement}
+      onStartShouldSetResponder={() => isGameMode}
+      onResponderGrant={isGameMode ? handleBallMovement : () => {}}
       onLayout={handleLayout}
     >
-      {isBallMoving && <BallComponent startPosition={ballPosition} containerDimensions={containerDimensions} />}
+      {(isBallMoving && isGameMode) && <BallComponent startPosition={ballPosition} containerDimensions={containerDimensions} />}
       {!title ? 
         <Animated.View style={styles.emptyTitleContainer}>
           <ThemedText style={styles.emptyTitle}>{'Хочешь сказку?'}</ThemedText>
@@ -139,7 +144,7 @@ const HomeScreen: React.FC = () => {
       }
       {title ? 
       <ScrollView contentContainerStyle={styles.storyContainer}>
-        <TheStoryText contentFromHistory={contentFromHistory} />
+        <TheStoryText contentFromHistory={contentFromHistory} disabledButtons={isScreenBlocked}/>
       </ScrollView>
     :
       <LottieView
@@ -150,20 +155,20 @@ const HomeScreen: React.FC = () => {
       />
       }
       {title ?
-        <FairytaleButton onPress={handleNewStoryRequest} disabled={isLoading || fetching} />
+        <FairytaleButton onPress={handleNewStoryRequest} disabled={isLoading || fetching} blocked={isScreenBlocked} />
         :
-        <FairytaleButton customText={'Хочу'}  onPress={handleNewStoryRequest} disabled={isLoading || fetching} />
+        <FairytaleButton customText={'Хочу'}  onPress={handleNewStoryRequest} disabled={isLoading || fetching} blocked={isScreenBlocked} />
       }
     </ThemedView>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
     paddingBottom: 40,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: isDarkMode ? '#121212' : '#f5f5f5',
   },
   titleContainer: {
     alignItems: 'center',
@@ -178,7 +183,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: 'bold',
-    color: '#DAA520',
+    color: isDarkMode ? '#FFD700' : '#DAA520',
     textAlign: 'center',
     lineHeight: 40,
     fontFamily: 'VezitsaCyrillic',
@@ -186,7 +191,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#DAA520',
+    color: isDarkMode ? '#FFD700' : '#DAA520',
     textAlign: 'center',
     lineHeight: 50,
     fontFamily: 'VezitsaCyrillic',
@@ -194,9 +199,9 @@ const styles = StyleSheet.create({
   storyContainer: {
     padding: 10,
     borderRadius: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDarkMode ? '#1E1E1E' : '#ffffff',
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: isDarkMode ? '#000' : '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,

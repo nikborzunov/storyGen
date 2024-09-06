@@ -4,11 +4,15 @@ import { addStoryToHistory, addStoryToLibrary } from '../store/reducers/StorySli
 
 const API_URL = 'http://192.168.0.103:1001';
 
+type IFetchStoryBody = {
+	themes: string[];
+};
+
 export const storyAPI = createApi({
 	reducerPath: 'storyAPI',
 	baseQuery: fetchBaseQuery({ baseUrl: API_URL }),
 	endpoints: (build) => ({
-		fetchAllStories: build.query<{data: IStory}, string[]>({
+		fetchAllStories: build.query<{data: IStory}, IFetchStoryBody>({
 			query: (body) => ({
 				url: '/story/create',
 				method: 'POST',

@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Animated, View } from 'react-native';
 import LottieView from 'lottie-react-native';
+import { useAppSelector } from '@/src/hooks/redux';
 
 const LoaderView: React.FC = () => {
   const blinkAnim = new Animated.Value(1);
+  const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
+  const isDarkMode = toggleConfig['darkMode']?.checked;
 
   useEffect(() => {
     const blinkAnimation = Animated.loop(
@@ -17,6 +20,8 @@ const LoaderView: React.FC = () => {
 
     return () => blinkAnimation.stop();
   }, [blinkAnim]);
+
+  const styles = getStyles(isDarkMode);
 
   return (
     <View style={styles.loaderContainer}>
@@ -33,13 +38,13 @@ const LoaderView: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   loaderContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
   },
   loaderAnimation: {
     width: 200,
@@ -48,7 +53,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 50,
     fontWeight: 'bold',
-    color: '#DAA520',
+    color: isDarkMode ? '#FFD700' : '#DAA520',
     textAlign: 'center',
     lineHeight: 60,
     fontFamily: 'VezitsaCyrillic',

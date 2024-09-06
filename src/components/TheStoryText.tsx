@@ -3,14 +3,24 @@ import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useAppSelector } from '@/src/hooks/redux';
 
-const TheStoryText: React.FC<{ contentFromHistory: string | undefined }> = ({ contentFromHistory }) => {
+const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledButtons?: boolean }> = ({ contentFromHistory, disabledButtons }) => {
   const [displayedText, setDisplayedText] = useState<string>('');
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
 
+  const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
+  const isTypingMode = toggleConfig['typingEffect']?.checked;
+  const isDarkMode = toggleConfig['darkMode']?.checked;
+
   const library = useAppSelector(state => state?.story?.library);
   const lastStoryIndex = library?.length - 1;
   const fairytaleText = useRef(library?.[lastStoryIndex]?.content);
+
+  useEffect(() => {
+    if (contentFromHistory?.length) {
+      setIsPaused(true);
+    };
+  }, [contentFromHistory?.length]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -18,67 +28,75 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined }> = ({ co
     if (contentFromHistory?.length) {
       if (fairytaleText?.current !== contentFromHistory) {
         fairytaleText.current = contentFromHistory;
-        setCurrentIndex(contentFromHistory?.length);
+        setCurrentIndex(contentFromHistory.length);
       };
 
       setDisplayedText(contentFromHistory);
     };
 
-    if (fairytaleText?.current?.length && currentIndex < fairytaleText?.current?.length && !isPaused) {
+    if ((isTypingMode && !disabledButtons) && fairytaleText?.current?.length && currentIndex < fairytaleText?.current?.length && !isPaused) {
       interval = setInterval(() => {
-        setDisplayedText(prev => prev + fairytaleText?.current[currentIndex]);
+        setDisplayedText(prev => prev + fairytaleText.current[currentIndex]);
         setCurrentIndex(prevIndex => prevIndex + 1);
       }, 100);
 
-      if (currentIndex > fairytaleText?.current?.length) {
-        setIsPaused(true);
-      };
-    }
+    } else {
+      setDisplayedText(fairytaleText.current);
+      setCurrentIndex(fairytaleText.current.length);
+    };
+
+    if (currentIndex >= fairytaleText.current.length) {
+      setIsPaused(true);
+    };
 
     return () => {
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [fairytaleText, currentIndex, isPaused, contentFromHistory?.length]);
+  }, [fairytaleText, currentIndex, isPaused, contentFromHistory?.length, isTypingMode]);
 
   const togglePause = useCallback(() => {
     setIsPaused(prev => !prev);
-  }, [currentIndex]);
+  }, []);
+
+  const styles = getStyles(isDarkMode);
 
   return (
     <TouchableWithoutFeedback onPress={togglePause}>
       <View style={styles.storyTextContainer}>
         <ThemedText style={styles.storyText}>{displayedText}</ThemedText>
-        <ThemedText style={isPaused ? styles.resumeText : styles.pauseText}>
-          {isPaused ? 'Нажмите, чтобы продолжить' : 'Нажмите, чтобы приостановить'}
-        </ThemedText>
+        {isTypingMode && !disabledButtons && !contentFromHistory?.length ? (
+          <ThemedText style={isPaused ? styles.resumeText : styles.pauseText}>
+            {isPaused ? 'Нажмите, чтобы продолжить' : 'Нажмите, чтобы приостановить'}
+          </ThemedText>
+        ) : null}
       </View>
     </TouchableWithoutFeedback>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   storyTextContainer: {
-    marginTop: 10,
     padding: 15,
+    backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
   },
   storyText: {
     fontSize: 18,
     lineHeight: 24,
-    color: '#333',
+    color: isDarkMode ? '#E0E0E0' : '#333',
     textAlign: 'justify',
     fontFamily: 'ofont.ru_Palatino-Normal',
   },
   pauseText: {
     fontSize: 16,
-    color: '#ffa07a',
+    color: isDarkMode ? '#FFA07A' : '#FF4500',
     textAlign: 'center',
     marginTop: 10,
   },
   resumeText: {
     fontSize: 16,
-    color: '#44944A',
+    color: isDarkMode ? '#44944A' : '#228B22',
     textAlign: 'center',
     marginTop: 10,
   },

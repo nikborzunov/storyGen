@@ -4,16 +4,22 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import LottieView from 'lottie-react-native'; // Импортируйте LottieView
+import LottieView from 'lottie-react-native';
 import FairytaleButton from '../buttons/FairytaleButton';
+import { useAppSelector } from '@/src/hooks/redux';
 
 const ErrorView = ({ onRetry }: { onRetry: () => void }) => {
   const [isDirty, setDirty] = useState(false);
+
+  const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
+  const isDarkMode = toggleConfig['darkMode']?.checked;
 
   const retryOnError = () => {
     setDirty(true);
     onRetry();
   };
+
+  const styles = getStyles(isDarkMode);
 
   return (
     <View style={styles.loaderContainer}>
@@ -23,8 +29,8 @@ const ErrorView = ({ onRetry }: { onRetry: () => void }) => {
       loop
       style={styles.loaderAnimation}
     />
-    <Animated.Text style={[styles.loadingText]}>
-      {`Упс.. Что-то пошло ни так.
+    <Animated.Text style={styles.loadingText}>
+      {`Упс.. Что-то пошло не так.
       \n Мы знаем о проблеме и уже работаем.
       \n Попробуйте обновить страницу или зайти позже.`}
     </Animated.Text>
@@ -33,30 +39,24 @@ const ErrorView = ({ onRetry }: { onRetry: () => void }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   loaderContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#ffffff', // Белый фон
+    backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
   },
   loaderAnimation: {
     width: 200,
     height: 200,
   },
-  errorText: {
-    fontSize: 15,
-    color: 'red',
-    textAlign: 'center',
-    marginVertical: 20,
-  },
   loadingText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#DAA520',
+    color: isDarkMode ? '#FFA500' : '#DAA520',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 30,
     fontFamily: 'VezitsaCyrillic',
     marginTop: 20,
   },

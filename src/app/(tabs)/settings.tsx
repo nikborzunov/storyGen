@@ -1,24 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Animated } from 'react-native';
 import SelectBox from '@/src/components/buttons/selects/SelectBox';
-import ToggleSwitch from '@/src/components/buttons/toggles/ToggleSwitch';
 import { useNavigation } from '@react-navigation/native';
 import { ThemedText } from '@/src/components/ThemedText';
-import { ThemedView } from '@/src/components/ThemedView';
 import { useAppDispatch, useAppSelector } from '@/src/hooks/redux';
 import { chooseStoryTheme } from '@/src/store/reducers/SettingsSlice';
 import { ISelectOption } from '@/src/typing/settings';
+import ToggleConfig from '@/src/components/buttons/toggles/ToggleConfig';
 
 const Settings: React.FC = () => {
-  const [isMusicEnabled, setMusicEnabled] = useState(false);
-  const [isTypingEffectEnabled, setTypingEffectEnabled] = useState(false);
-  const [isUniqueStoriesEnabled, setUniqueStoriesEnabled] = useState(false);
-  const [isGameModeEnabled, setGameModeEnabled] = useState(false);
-  const [isScreenLockEnabled, setScreenLockEnabled] = useState(false);
-  const [isHistorySizeEnabled, setIsHistorySizeEnabled] = useState(false);
-  
   const [selectedTheme, setSelectedTheme] = useState<ISelectOption[]>([]);
   const [selectedHistory, setSelectedHistory] = useState<ISelectOption | null>(null);
+  const scrollY = new Animated.Value(0);
 
   const navigation = useNavigation<any>();
 
@@ -28,7 +21,10 @@ const Settings: React.FC = () => {
   const history = useAppSelector(state => state?.story?.history);
   const library = useAppSelector(state => state?.story?.library);
 
-  const titleOfStoryFromHistory = library?.find((item) => item?.title === selectedHistory?.name)?.title
+  const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
+  const isDarkMode = toggleConfig['darkMode']?.checked;
+
+  const titleOfStoryFromHistory = library?.find((item) => item?.title === selectedHistory?.name)?.title;
 
   useEffect(() => {
     if (selectedHistory) {
@@ -41,58 +37,111 @@ const Settings: React.FC = () => {
     dispatch(chooseStoryTheme(selectedTheme));
   }, [selectedTheme, dispatch]);
 
+  const styles = getStyles(isDarkMode);
+
   return (
     <View style={styles.container}>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Настройки</ThemedText>
-      </ThemedView>
-
-      <View style={styles.userContainer}>
-        <ThemedText type="subtitle">👤 Имя пользователя</ThemedText>
-      </View>
-
-      <SelectBox
-        title='Темы сказок'
-        options={selectedThemesFromStore} 
-        selected={selectedTheme} 
-        onSelect={setSelectedTheme}
-        itemType='checkbox' 
-      />
-
-      <SelectBox 
-        title='История'
-        options={history}
-        selected={selectedHistory} 
-        onSelect={setSelectedHistory} 
-        itemType="link"
-        navigation={navigation} 
-      />
-
-      <ToggleSwitch title="Размер истории" value={isHistorySizeEnabled} onValueChange={setIsHistorySizeEnabled} />
-      <ToggleSwitch title="Музыка" value={isMusicEnabled} onValueChange={setMusicEnabled} />
-      <ToggleSwitch title="Эффект печатания" value={isTypingEffectEnabled} onValueChange={setTypingEffectEnabled} />
-      <ToggleSwitch title="Только уникальные истории" value={isUniqueStoriesEnabled} onValueChange={setUniqueStoriesEnabled} />
-      <ToggleSwitch title="Режим игры" value={isGameModeEnabled} onValueChange={setGameModeEnabled} />
-      <ToggleSwitch title="Блокировка экрана" value={isScreenLockEnabled} onValueChange={setScreenLockEnabled} />
+      <Animated.View style={[styles.titleContainer, { top: 0, left: 0, right: 0 }]}>
+        <ThemedText type="title" style={styles.titleText}>Настройки</ThemedText>
+      </Animated.View>
+      
+      <Animated.ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.contentContainer, { marginTop: 100, paddingTop: 16 }]}
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        keyboardShouldPersistTaps="always"
+      >
+        <View style={styles.userContainer}>
+          <ThemedText type="subtitle" style={styles.userText}>👤 Имя пользователя</ThemedText>
+        </View>
+        
+        <SelectBox
+          title='Темы сказок'
+          options={selectedThemesFromStore}
+          selected={selectedTheme}
+          onSelect={setSelectedTheme}
+          itemType='checkbox'
+          isDarkMode={isDarkMode}
+        />
+        
+        <SelectBox
+          title='История'
+          options={history}
+          selected={selectedHistory}
+          onSelect={setSelectedHistory}
+          itemType="link"
+          isDarkMode={isDarkMode}
+        />
+        
+        <ToggleConfig />
+      </Animated.ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    paddingTop: 50,
-    backgroundColor: '#121212',
+    backgroundColor: isDarkMode ? '#222222' : '#f3f4f6',
   },
   titleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    backgroundColor: 'transparent',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 40,
+    paddingBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: isDarkMode ? '#333333' : '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: isDarkMode ? '#666666' : '#e3e3e8',
+    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  titleText: {
+    fontSize: 32,
+    color: isDarkMode ? '#ffffff' : '#333333',
+    fontWeight: '700',
+    alignItems: 'center',
+  },
+  contentContainer: {
+    marginTop: 110,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 120,
   },
   userContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
+    alignItems: 'center',
+    backgroundColor: isDarkMode ? '#333333' : '#ffffff',
+    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  userText: {
+    color: isDarkMode ? '#ffffff' : '#333333',
+    fontSize: 18,
+    fontWeight: '500',
     alignItems: 'center',
   },
 });
