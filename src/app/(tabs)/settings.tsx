@@ -86,7 +86,7 @@ const Settings: React.FC = () => {
 const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isDarkMode ? '#222222' : '#f3f4f6',
+    backgroundColor: isDarkMode ? '#222222' : '#fafafa',
   },
   titleContainer: {
     position: 'absolute',
@@ -99,14 +99,14 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: isDarkMode ? '#333333' : '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: isDarkMode ? '#666666' : '#e3e3e8',
+    borderBottomColor: isDarkMode ? '#666666' : '#e0e0e0',
     zIndex: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: isDarkMode ? 0.1 : 0.08,
     shadowRadius: 3.84,
     elevation: 5,
   },
@@ -139,7 +139,7 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     elevation: 3,
   },
   userText: {
-    color: isDarkMode ? '#ffffff' : '#333333',
+    color: isDarkMode ? '#ffffff' : '#494949',
     fontSize: 18,
     fontWeight: '500',
     alignItems: 'center',

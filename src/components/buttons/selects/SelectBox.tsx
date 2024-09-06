@@ -7,6 +7,7 @@ import { ISelectOption } from '@/src/typing/settings';
 
 const ANIMATION_TYPE = 'fade';
 const SEARCH_PLACEHOLDER = 'Search...';
+const CLEAR_SELECTION_TEXT = 'Очистить выбор';
 const MODAL_BACKGROUND_STYLE = { backgroundColor: 'rgba(0, 0, 0, 0.7)' };
 
 type SelectBoxPropsCheckbox = {
@@ -91,11 +92,26 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
     setListVisible(false);
 
     Animated.timing(rotateAnimation, {
-      toValue: 0,
+      toValue: 0, 
       duration: 300,
       useNativeDriver: true,
     }).start();
   }, [tempSelected, onSelect, rotateAnimation]);
+
+  const handleClearSelection = useCallback(() => {
+    if (itemType === 'checkbox') {
+      setTempSelected([]);
+    } else if (itemType === 'link') {
+      onSelect(null as any);
+      setListVisible(false);
+
+      Animated.timing(rotateAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [itemType, onSelect, rotateAnimation]);
 
   const filteredOptions = useMemo(() => (
     options.filter(option =>
@@ -179,11 +195,14 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
               )}
             />
             {itemType === 'checkbox' && (
-              <View style={styles.applyButtonContainer}>
+             <View style={styles.buttonGroupContainer}>
+                <TouchableOpacity style={styles.clearButton} onPress={handleClearSelection}>
+                 <ThemedText type="default" style={styles.clearButtonText}>{CLEAR_SELECTION_TEXT}</ThemedText>
+               </TouchableOpacity>
                 <TouchableOpacity style={styles.applyButton} onPress={handleApplySelection}>
                   <ThemedText type="default" style={styles.applyButtonText}>Применить</ThemedText>
                 </TouchableOpacity>
-              </View>
+             </View>
             )}
           </View>
         </View>
@@ -193,88 +212,104 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
 });
 
 const getStyles = (isDarkMode: boolean) => StyleSheet.create({
-    selectContainer: {
+  selectContainer: {
       marginBottom: 15,
       position: 'relative',
-    },
-    selectBoxCurrent: {
+  },
+  selectBoxCurrent: {
       padding: 15,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       borderWidth: 1,
-      borderColor: isDarkMode ? '#333333' : '#CCCCCC',
+      borderColor: isDarkMode ? '#333333' : '#DDDDDD',
       borderRadius: 8,
-      backgroundColor: isDarkMode ? '#333333' : '#F9F9F9',
-      shadowColor: isDarkMode ? '#000' : '#000',
+      backgroundColor: isDarkMode ? '#333333' : '#FFFFFF',
+      shadowColor: isDarkMode ? '#000' : '#000000', 
       shadowOffset: {
-        width: 0,
-        height: 2,
+          width: 0,
+          height: 2,
       },
-      shadowOpacity: 0.08,
-      shadowRadius: 3.84,
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
       elevation: 2,
-    },
-    selectBoxValue: {
+  },
+  selectBoxValue: {
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    selectBoxTitle: {
-      color: isDarkMode ? '#ffffff' : '#4A4A4A',
-    },
-    modalBackground: {
+  },
+  selectBoxTitle: {
+      color: isDarkMode ? '#ffffff' : '#333333',
+  },
+  modalBackground: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
       ...MODAL_BACKGROUND_STYLE,
-    },
-    modalContainer: {
+  },
+  modalContainer: {
       width: '85%',
       maxHeight: '85%',
-      backgroundColor: isDarkMode ? '#222222' : '#FFFFFFF0',
+      backgroundColor: isDarkMode ? '#222222' : '#FDFDFD',
       borderRadius: 12,
       padding: 20,
-    },
-    searchInput: {
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 5,
+      elevation: 5,
+  },
+  searchInput: {
       fontSize: 16,
       padding: 10,
-      backgroundColor: isDarkMode ? '#333333' : '#EEEEEE',
+      backgroundColor: isDarkMode ? '#333333' : '#F5F5F5',
       borderRadius: 8,
       color: isDarkMode ? '#ffffff' : '#333333',
       marginBottom: 10,
-    },
-    selectBoxOption: {
+  },
+  selectBoxOption: {
       padding: 15,
       backgroundColor: isDarkMode ? '#222222' : '#FFFFFF',
       borderBottomWidth: 1,
       borderBottomColor: isDarkMode ? '#333333' : '#EEEEEE',
-    },
-    optionContainer: {
+  },
+  optionContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: 10,
-    },
-    checkboxLabel: {
+  },
+  checkboxLabel: {
       marginLeft: 10,
       color: isDarkMode ? '#ffffff' : '#4A4A4A',
-    },
-    applyButtonContainer: {
+  },
+  buttonGroupContainer: {
       marginTop: 20,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    applyButton: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+  },
+  applyButton: {
       backgroundColor: isDarkMode ? '#333333' : '#4A90E2',
       paddingVertical: 12,
-      paddingHorizontal: 24,
+      paddingHorizontal: 20,
       borderRadius: 8,
-    },
-    applyButtonText: {
-      color: isDarkMode ? '#ffffff' : '#FFFFFF',
+  },
+  applyButtonText: {
+      color: '#FFFFFF',
       fontSize: 16,
       fontWeight: '600',
-    },
-    emptyContainer: {
+  },
+  clearButton: {
+      backgroundColor: isDarkMode ? '#444444' : '#FF6F61',
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+      marginRight: 15,
+  },
+  clearButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
+  },
+  emptyContainer: {
       padding: 20,
       paddingTop: 30,
       alignItems: 'center',
@@ -283,19 +318,19 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
       borderRadius: 8,
       borderColor: isDarkMode ? '#333333' : '#EEEEEE',
       borderWidth: 1,
-    },
-    emptyText: {
-      color: isDarkMode ? '#999999' : '#555555',
+  },
+  emptyText: {
+      color: isDarkMode ? '#999999' : '#777777',
       fontSize: 16,
       textAlign: 'center',
       marginBottom: 8,
-    },
-    emptyInfoText: {
+  },
+  emptyInfoText: {
       color: isDarkMode ? '#777777' : '#AAAAAA',
       fontSize: 14,
       textAlign: 'center',
-    },
-    closeButton: {
+  },
+  closeButton: {
       position: 'absolute',
       top: -20,
       right: -20,
@@ -305,12 +340,12 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
       elevation: 2,
       shadowColor: isDarkMode ? '#000' : '#000000',
       shadowOffset: {
-        width: 0,
-        height: 2,
+          width: 0,
+          height: 2,
       },
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.2,
       shadowRadius: 4,
-    },
-  });
+  },
+});
 
 export default SelectBox;

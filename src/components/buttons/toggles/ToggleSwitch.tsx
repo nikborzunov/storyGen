@@ -20,7 +20,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ title, value, onValueChange
     false: '#9E9E9E',
   };
 
-  const switchThumbColor: string = '#ffffff';
+  const switchThumbColor: string = isDarkMode ? '#ffffff' : '#ffffff';
 
   return (
     <View style={styles.toggleContainer}>
@@ -42,13 +42,13 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 15,
     padding: 10,
-    backgroundColor: isDarkMode ? '#333333' : '#f0f0f0',
+    backgroundColor: isDarkMode ? '#333333' : '#f7f7f7',
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: isDarkMode ? '#666666' : '#e2e2e2',
+    borderColor: isDarkMode ? '#666666' : '#dddddd',
   },
   text: {
-    color: isDarkMode ? '#ffffff' : '#000000',
+    color: isDarkMode ? '#ffffff' : '#222222',
     fontSize: 16,
   },
 });

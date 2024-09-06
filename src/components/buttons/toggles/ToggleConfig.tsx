@@ -25,7 +25,8 @@ const ToggleConfig: React.FC = () => {
 					name={name}
 					value={checked}
 					onValueChange={(value: boolean) => handleToggleConfigChange(name, title, value)}
-					trackColor={{ true: isDarkMode ? '#8a8a8a' : '#b2b2b2', false: isDarkMode ? '#8a8a8a' : '#b2b2b2' }} isDarkMode={isDarkMode}
+					trackColor={{ true: isDarkMode ? '#8a8a8a' : '#cccccc', false: isDarkMode ? '#8a8a8a' : '#cccccc' }} 
+					isDarkMode={isDarkMode}
 				/>
 			))}
 		</ScrollView>
@@ -35,11 +36,11 @@ const ToggleConfig: React.FC = () => {
 const getStyles = (isDarkMode: boolean) => StyleSheet.create({
 	container: {
 		padding: 16,
-		backgroundColor: isDarkMode ? '#222222' : '#f0f0f0',
+		backgroundColor: isDarkMode ? '#222222' : '#fafafa',
 		marginVertical: 10,
 		borderRadius: 10,
 		borderWidth: 1,
-		borderColor: isDarkMode ? '#333333' : '#e2e2e2',
+		borderColor: isDarkMode ? '#333333' : '#dddddd',
 	},
 });
 
