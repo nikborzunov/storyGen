@@ -6,59 +6,47 @@ import { useAppSelector } from '@/src/hooks/redux';
 const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledButtons?: boolean }> = ({ contentFromHistory, disabledButtons }) => {
   const [displayedText, setDisplayedText] = useState<string>('');
   const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-
+  const [currentCharIndex, setCurrentCharIndex] = useState<number>(0);
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
   const isTypingMode = toggleConfig['typingEffect']?.checked;
   const isDarkMode = toggleConfig['darkMode']?.checked;
-
-  const library = useAppSelector(state => state?.story?.library);
-  const lastStoryIndex = library?.length - 1;
-  const fairytaleText = useRef(library?.[lastStoryIndex]?.content);
-
-  useEffect(() => {
-    if (contentFromHistory?.length) {
-      setIsPaused(true);
-    };
-  }, [contentFromHistory?.length]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (contentFromHistory?.length) {
-      if (fairytaleText?.current !== contentFromHistory) {
-        fairytaleText.current = contentFromHistory;
-        setCurrentIndex(contentFromHistory.length);
-      };
-
-      setDisplayedText(contentFromHistory);
-    };
-
-    if ((isTypingMode && !disabledButtons) && fairytaleText?.current?.length && currentIndex < fairytaleText?.current?.length && !isPaused) {
-      interval = setInterval(() => {
-        setDisplayedText(prev => prev + fairytaleText.current[currentIndex]);
-        setCurrentIndex(prevIndex => prevIndex + 1);
-      }, 100);
-
-    } else {
-      setDisplayedText(fairytaleText.current);
-      setCurrentIndex(fairytaleText.current.length);
-    };
-
-    if (currentIndex >= fairytaleText.current.length) {
-      setIsPaused(true);
-    };
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [fairytaleText, currentIndex, isPaused, contentFromHistory?.length, isTypingMode]);
+  const typingSpeed = 50;
 
   const togglePause = useCallback(() => {
     setIsPaused(prev => !prev);
   }, []);
+
+  useEffect(() => {
+    setDisplayedText('');
+    setCurrentCharIndex(0);
+    setIsPaused(false);
+  }, [contentFromHistory]);
+  
+  useEffect(() => {
+    if (!isTypingMode) {
+      setDisplayedText(contentFromHistory || '');
+      setCurrentCharIndex(contentFromHistory?.length || 0);
+      return;
+    }
+  
+    if (!contentFromHistory || isPaused) return;
+  
+    const timer = currentCharIndex < contentFromHistory.length ?
+      setTimeout(() => {
+        setDisplayedText(prevText => prevText + contentFromHistory[currentCharIndex]);
+        setCurrentCharIndex(prevIndex => prevIndex + 1);
+      }, typingSpeed) : null;
+
+    if((!contentFromHistory || currentCharIndex >= contentFromHistory?.length -1)) {
+      setIsPaused(true);
+    };
+  
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [currentCharIndex, isPaused, isTypingMode, contentFromHistory, typingSpeed]);
 
   const styles = getStyles(isDarkMode);
 
@@ -66,7 +54,7 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
     <TouchableWithoutFeedback onPress={togglePause}>
       <View style={styles.storyTextContainer}>
         <ThemedText style={styles.storyText}>{displayedText}</ThemedText>
-        {isTypingMode && !disabledButtons && !contentFromHistory?.length ? (
+        {isTypingMode && (!disabledButtons && !(!contentFromHistory || currentCharIndex >= contentFromHistory?.length -1)) ? (
           <ThemedText style={isPaused ? styles.resumeText : styles.pauseText}>
             {isPaused ? 'Нажмите, чтобы продолжить' : 'Нажмите, чтобы приостановить'}
           </ThemedText>

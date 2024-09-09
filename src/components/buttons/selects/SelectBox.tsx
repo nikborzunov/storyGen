@@ -1,9 +1,11 @@
+import 'react-native-get-random-values';
 import React, { useState, useCallback, memo, useMemo, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, FlatList, Modal, TextInput, Animated } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, FlatList, Modal, TextInput, Animated, Dimensions } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import Svg, { Path } from 'react-native-svg';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ISelectOption } from '@/src/typing/settings';
+import { v4 as uuidv4 } from 'uuid';
 
 const ANIMATION_TYPE = 'fade';
 const SEARCH_PLACEHOLDER = 'Search...';
@@ -46,6 +48,18 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
   const [tempSelected, setTempSelected] = useState<ISelectOption[]>(selected as ISelectOption[]);
 
   const rotateAnimation = useRef(new Animated.Value(0)).current;
+
+  const { width } = Dimensions.get('window');
+
+  const getButtonTextSize = useMemo(() => {
+    if (width < 375) {
+        return 10;
+    } else if (width < 768) {
+        return 14;
+    } else {
+        return 18;
+    };
+  }, [width]);
 
   React.useEffect(() => {
     setTempSelected(selected as ISelectOption[]);
@@ -115,7 +129,7 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
 
   const filteredOptions = useMemo(() => (
     options.filter(option =>
-      option.name.toLowerCase().includes(searchQuery.toLowerCase())
+      option?.name?.toLowerCase().includes(searchQuery?.toLowerCase())
     )
   ), [options, searchQuery]);
 
@@ -124,7 +138,7 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
     outputRange: ['0deg', '180deg'],
   });
 
-  const styles = getStyles(isDarkMode);
+  const styles = getStyles(isDarkMode, getButtonTextSize);
 
   return (
     <View style={styles.selectContainer}>
@@ -159,7 +173,7 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
             />
             <FlatList
               data={filteredOptions}
-              keyExtractor={item => item.value}
+              keyExtractor={item => uuidv4()}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => handleSelect(item)}
@@ -211,7 +225,7 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
   );
 });
 
-const getStyles = (isDarkMode: boolean) => StyleSheet.create({
+const getStyles = (isDarkMode: boolean, getButtonTextSize: number) => StyleSheet.create({
   selectContainer: {
       marginBottom: 15,
       position: 'relative',
@@ -282,32 +296,36 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
       color: isDarkMode ? '#ffffff' : '#4A4A4A',
   },
   buttonGroupContainer: {
-      marginTop: 20,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%', 
   },
   applyButton: {
-      backgroundColor: isDarkMode ? '#333333' : '#4A90E2',
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 8,
-  },
-  applyButtonText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: '600',
+    backgroundColor: isDarkMode ? '#333333' : '#4A90E2',
+    paddingVertical: 12,
+    flex: 1,
+    marginHorizontal: 5,
+    borderRadius: 8,
   },
   clearButton: {
-      backgroundColor: isDarkMode ? '#444444' : '#FF6F61',
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 8,
-      marginRight: 15,
+    backgroundColor: isDarkMode ? '#444444' : '#FF6F61',
+    paddingVertical: 12,
+    flex: 1,
+    marginHorizontal: 5,
+    borderRadius: 8,
+  },
+  applyButtonText: {
+    color: '#FFFFFF',
+    fontSize: getButtonTextSize,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   clearButtonText: {
       color: '#FFFFFF',
-      fontSize: 16,
+      fontSize: getButtonTextSize,
       fontWeight: '600',
+      textAlign: 'center',
   },
   emptyContainer: {
       padding: 20,

@@ -30,25 +30,31 @@ export const settingsSlice = createSlice({
   reducers: {
     chooseStoryTheme(state, action: PayloadAction<ISelectOption[]>) {
       const selectedNames = new Set(action.payload.map(opt => opt.name));
-    
-      state.selectedThemes = state.selectedThemes.map(theme => {
-        if (selectedNames.has(theme.name)) {
-          return { ...theme, checked: true };
-        }
-        return { ...theme, checked: false };
-      });
+
+      const updatedThemes = state.selectedThemes.map(theme => ({
+        ...theme,
+        checked: selectedNames.has(theme.name)
+      }));
+
+      return {
+        ...state,
+        selectedThemes: updatedThemes
+      };
     },
     changeToggleConfig(state, action: PayloadAction<IToggle>) {
       const { name, title, checked } = action.payload;
 
-      const updatedToggleConfig = { 
+      const updatedToggleConfig = {
         ...state.toggleConfig,
         [name]: { name, title, checked },
       };
 
-      state.toggleConfig = updatedToggleConfig;
+      return {
+        ...state,
+        toggleConfig: updatedToggleConfig
+      };
     },
-  }
+  },
 });
 
 export default settingsSlice.reducer;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -8,8 +8,9 @@ import LottieView from 'lottie-react-native';
 import FairytaleButton from '../buttons/FairytaleButton';
 import { useAppSelector } from '@/src/hooks/redux';
 
-const ErrorView = ({ onRetry }: { onRetry: () => void }) => {
+const ErrorView = ({ onRetry, errorMessage }: { onRetry: () => void; errorMessage: string }) => {
   const [isDirty, setDirty] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
   const isDarkMode = toggleConfig['darkMode']?.checked;
@@ -19,23 +20,35 @@ const ErrorView = ({ onRetry }: { onRetry: () => void }) => {
     onRetry();
   };
 
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+
+    const timer = setTimeout(() => {
+      setDirty(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const styles = getStyles(isDarkMode);
 
   return (
     <View style={styles.loaderContainer}>
-    <LottieView
-      source={require('../../assets/lottie/errorSmile.json')}
-      autoPlay
-      loop
-      style={styles.loaderAnimation}
-    />
-    <Animated.Text style={styles.loadingText}>
-      {`Упс.. Что-то пошло не так.
-      \n Мы знаем о проблеме и уже работаем.
-      \n Попробуйте обновить страницу или зайти позже.`}
-    </Animated.Text>
-    <FairytaleButton customText={'Обновить'} onPress={retryOnError} disabled={isDirty} />
-  </View>
+      <LottieView
+        source={require('../../assets/lottie/errorSmile.json')}
+        autoPlay
+        loop
+        style={styles.loaderAnimation}
+      />
+      <Animated.Text style={[styles.loadingText, { opacity: fadeAnim }]}>
+        {errorMessage}
+      </Animated.Text>
+      <FairytaleButton customText={'Обновить'} onPress={retryOnError} disabled={isDirty} />
+    </View>
   );
 };
 

@@ -32,7 +32,7 @@ const LoaderView: React.FC = () => {
         style={styles.loaderAnimation}
       />
       <Animated.Text style={[styles.loadingText, { opacity: blinkAnim }]}>
-        Придумываем сказку
+        Загружаем сказку
       </Animated.Text>
     </View>
   );

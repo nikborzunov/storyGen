@@ -7,37 +7,69 @@ import { useAppDispatch, useAppSelector } from '@/src/hooks/redux';
 import { chooseStoryTheme } from '@/src/store/reducers/SettingsSlice';
 import { ISelectOption } from '@/src/typing/settings';
 import ToggleConfig from '@/src/components/buttons/toggles/ToggleConfig';
+import LoaderView from '@/src/components/loaders/loaderView';
+import { getHistoryOptions, getSelectedThemes } from '@/src/store/selectors/selectors';
+import { useLoadStoryByIdQuery } from '@/src/services/StoryService';
 
 const Settings: React.FC = () => {
-  const [selectedTheme, setSelectedTheme] = useState<ISelectOption[]>([]);
-  const [selectedHistory, setSelectedHistory] = useState<ISelectOption | null>(null);
   const scrollY = new Animated.Value(0);
-
   const navigation = useNavigation<any>();
-
   const dispatch = useAppDispatch();
-
-  const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
-  const history = useAppSelector(state => state?.story?.history);
-  const library = useAppSelector(state => state?.story?.library);
+  const [fetching, setFetching] = useState(false);
 
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
-  const isDarkMode = toggleConfig['darkMode']?.checked;
+  const isDarkMode = toggleConfig.darkMode?.checked;
 
-  const titleOfStoryFromHistory = library?.find((item) => item?.title === selectedHistory?.name)?.title;
+  const historyOptions = useAppSelector(getHistoryOptions);
+  const selectedThemesFromStore = useAppSelector(getSelectedThemes);
+
+  const [selectedTheme, setSelectedTheme] = useState<ISelectOption[]>([]);
+  const [selectedHistory, setSelectedHistory] = useState<ISelectOption | null>(null);
+  const [storyId, setStoryId] = useState<string | null>(null);
+
+  const {
+    isLoading,
+  } = useLoadStoryByIdQuery(storyId || '', {
+    skip: !storyId,
+  });
 
   useEffect(() => {
-    if (selectedHistory) {
-      navigation.navigate('index', { titleOfStoryFromHistory });
-      setSelectedHistory(null);
+    if (!isLoading && storyId) {
+      setFetching(true);
+      const timer = setTimeout(() => {
+        navigation.navigate('index', { storyId });
+        setSelectedHistory(null);
+        setStoryId(null);
+        setFetching(false);
+      }, 1000);
+
+      return () => clearTimeout(timer);
     }
-  }, [selectedHistory, navigation]);
+  }, [selectedHistory, isLoading, storyId, navigation]);
 
   useEffect(() => {
     dispatch(chooseStoryTheme(selectedTheme));
   }, [selectedTheme, dispatch]);
 
+  const handleSelectHistory = (selected: ISelectOption | null) => {
+    if (selected) {
+      const isValid = historyOptions.some(option => option.value === selected.value);
+      if (isValid) {
+        setStoryId(selected.value);
+        setSelectedHistory(selected);
+      } else {
+        setSelectedHistory(null);
+      }
+    } else {
+      setSelectedHistory(null);
+    }
+  };
+
   const styles = getStyles(isDarkMode);
+
+  if (fetching) {
+    return <LoaderView />;
+  };
 
   return (
     <View style={styles.container}>
@@ -70,9 +102,9 @@ const Settings: React.FC = () => {
         
         <SelectBox
           title='История'
-          options={history}
+          options={historyOptions}
           selected={selectedHistory}
-          onSelect={setSelectedHistory}
+          onSelect={handleSelectHistory}
           itemType="link"
           isDarkMode={isDarkMode}
         />
@@ -106,7 +138,7 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: isDarkMode ? 0.1 : 0.08,
+    shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
   },

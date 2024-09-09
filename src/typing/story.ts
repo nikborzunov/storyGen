@@ -1,6 +1,11 @@
 export type IStory = {
 	title: string;
 	content: string;
+	storyId: string;
 };
 
-export type IHistoryItem = { name: string, value: string };
+export type IHistory = {
+	userId: string;
+	storyId: string;
+	title: string;
+};

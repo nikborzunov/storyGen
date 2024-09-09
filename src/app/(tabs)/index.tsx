@@ -6,7 +6,7 @@ import { ThemedText } from '@/src/components/ThemedText';
 import { ThemedView } from '@/src/components/ThemedView';
 import TheStoryText from '@/src/components/TheStoryText';
 import { useAppSelector } from '@/src/hooks/redux';
-import { storyAPI } from '@/src/services/StoryServis';
+import { storyAPI } from '@/src/services/StoryService';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -16,10 +16,14 @@ import {
   Vibration,
 } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
+import { addHistory } from '@/src/store/reducers/StorySlice';
+import { useDispatch } from 'react-redux';
+import { DEFAULT_ERROR_MESSAGE } from '@/src/constants/errorMessages';
 
 type RootStackParamList = {
-  HomeScreen: { titleOfStoryFromHistory: string };
+  HomeScreen: { storyId: string };
 };
+const USER_ID = '39430948143'
 
 const HomeScreen: React.FC = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -29,11 +33,15 @@ const HomeScreen: React.FC = () => {
   const [isBallMoving, setIsBallMoving] = useState(false);
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [remainingStories, setRemainingStories] = useState(0);
   const [contentFromHistory, setContentFromHistory] = useState<string | undefined>('');
   const [fetching, setFetching] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const dispatch = useDispatch();
 
   const route = useRoute<RouteProp<RootStackParamList, 'HomeScreen'>>();
-  const titleOfStoryFromHistory = route.params?.titleOfStoryFromHistory;
+  const storyIdFromHistory = route.params?.storyId;
 
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
@@ -42,6 +50,7 @@ const HomeScreen: React.FC = () => {
   const isScreenBlocked = toggleConfig['blockScreen']?.checked;
 
   const library = useAppSelector(state => state?.story?.library);
+  const history = useAppSelector(state => state?.story?.history);
 
   const themes: string[] = [];
 
@@ -54,19 +63,38 @@ const HomeScreen: React.FC = () => {
   const [fetchStories, { data: story, isLoading, error }] = storyAPI.useLazyFetchAllStoriesQuery();
 
   useEffect(() => {
-    if (story?.data?.title?.length) {
-      setTitle(story?.data?.title.replace(/^"|"$/g, ''));
-      setFetching(false);
-    };
-  }, [isLoading, story])
+    if (error) {
+      let errorMessage: string;
+  
+      if ('status' in error && 'data' in error) {
+        errorMessage = (error.data as { message?: string })?.message || 'Произошла ошибка при загрузке историй';
+      } else if ('message' in error) {
+        errorMessage = error.message || 'Произошла ошибка при загрузке историй';
+      } else {
+        errorMessage = 'Произошла ошибка при загрузке историй';
+      }
+  
+      setErrorMessage(errorMessage);
+    }
+  }, [isLoading, error]);
+
+  useEffect(() => {
+    const curHistory = history?.map((item) => item?.storyId);
+    const curStory: any = library.find((item) => !curHistory.includes(item?.storyId));
+
+    addHistory([{ storyId: curStory?.storyId, title: curStory?.title?.replace(/^"|"$/g, ''), userId: USER_ID}])
+
+    setTitle(curStory?.title?.replace(/^"|"$/g, ''));
+    setContent(curStory?.content?.replace(/^"|"$/g, ''));
+  }, [library])
 
 
   useEffect(() => {
-    if (titleOfStoryFromHistory) {
-      const storyFromHistory = library?.find((item) => item.title === titleOfStoryFromHistory);
 
+    if (storyIdFromHistory) {
+      const storyFromHistory = library?.find((item) => item.storyId?.replace(/^"|"$/g, '') === storyIdFromHistory?.replace(/^"|"$/g, ''));
       if (storyFromHistory) {
-        setTitle(storyFromHistory.title);
+        setTitle(storyFromHistory.title?.replace(/^"|"$/g, ''));
         setContentFromHistory(storyFromHistory.content);
       }
     }
@@ -90,17 +118,50 @@ const HomeScreen: React.FC = () => {
     animateTitleAndFetchData();
   }, []);
 
+  useEffect(() => {
+    if (library && history) {
+        const viewedStoryIds = history?.map(item => item.storyId);
+        const unreadStoriesCount = library.filter(item => !viewedStoryIds.includes(item.storyId)).length;
+        setRemainingStories(unreadStoriesCount);
+    }
+  }, [library, history]);
+
   const handleNewStoryRequest = async () => {
     if (isScreenBlocked) return;
     setFetching(true);
     setContentFromHistory(undefined);
-    
+    setErrorMessage(null);
+
+    const requestBody = {
+        themes: themes,
+        viewedStories: history,
+        userId: USER_ID,
+    };
+
     try {
-      await fetchStories({themes: themes}).unwrap();
+        if (library?.length < 1 || !title?.length || remainingStories < 1) {
+            await fetchStories(requestBody).unwrap();
+        } else {
+          const viewedStoryIds = history?.map((item) => item?.storyId);
+
+          const curStory: any = library.find((item) => 
+              !viewedStoryIds.includes(item?.storyId) && 
+              item?.title?.replace(/^"|"$/g, '') !== title
+          );
+
+          if (curStory) {
+            dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID }]));
+          };
+
+          setTitle(curStory?.title?.replace(/^"|"$/g, ''));
+          setContent(curStory?.content?.replace(/^"|"$/g, ''));
+
+          setFetching(false);
+        }
     } catch (e) {
-      console.error(e);
+        setErrorMessage("Не удалось загрузить новую сказку. Пожалуйста, измените список тем или попробуйте снова позже.");
     } finally {
-      setFetching(false);
+        setFetching(false);
     }
   };
 
@@ -122,7 +183,7 @@ const HomeScreen: React.FC = () => {
   }
 
   if (error && !title) {
-    return <ErrorView onRetry={handleNewStoryRequest} />;
+    return <ErrorView onRetry={handleNewStoryRequest} errorMessage={errorMessage || DEFAULT_ERROR_MESSAGE} />;
   };
 
   return (
@@ -144,7 +205,7 @@ const HomeScreen: React.FC = () => {
       }
       {title ? 
       <ScrollView contentContainerStyle={styles.storyContainer}>
-        <TheStoryText contentFromHistory={contentFromHistory} disabledButtons={isScreenBlocked}/>
+        <TheStoryText contentFromHistory={contentFromHistory || content} disabledButtons={isScreenBlocked}/>
       </ScrollView>
     :
       <LottieView
