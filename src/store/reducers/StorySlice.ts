@@ -25,10 +25,11 @@ export const storySlice = createSlice({
       };
     },
     addHistory(state, action: PayloadAction<IHistory[]>) {
-      return {
-        ...state,
-        history: state.history.concat(action.payload),
-      };
+      action.payload.forEach((item) => {
+        if (!state.history.some(historyItem => historyItem.storyId === item.storyId)) {
+          state.history.push(item);
+        }
+      });
     },
     storiesFetching(state) {
       return {

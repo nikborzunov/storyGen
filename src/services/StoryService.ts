@@ -19,6 +19,12 @@ type IStoryLoadByIdResponse = {
   content: string;
 };
 
+interface HistoryResponse {
+	data: {
+			history: IHistory[];
+	};
+}
+
 export const storyAPI = createApi({
 	reducerPath: 'storyAPI',
 	baseQuery: fetchBaseQuery({ baseUrl: API_URL }),
@@ -32,10 +38,10 @@ export const storyAPI = createApi({
 			}),
 			async onQueryStarted(arg, { queryFulfilled, dispatch }) {
 				try {
-					const { data } = await queryFulfilled;
+					const { data: response } = await queryFulfilled;
 
-					const stories = data?.data?.stories;
-					const history = data?.data?.history;
+					const stories = response?.data?.stories;
+					const history = response?.data?.history;
 
 					dispatch(addStoriesToLibrary(stories));
 					dispatch(addHistory(history));
@@ -45,13 +51,28 @@ export const storyAPI = createApi({
 				}
 			}
 		}),
-		loadStoryById: build.query<IStoryLoadByIdResponse, string>({
+		loadStoryById: build.query<{ data: IStoryLoadByIdResponse }, string>({
       query: (storyId) => `/story/load?storyId=${storyId}`,
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
 				try {
-					const { data } = await queryFulfilled;
-					const story = data?.data
+					const { data: response } = await queryFulfilled;
+
+					const story = response?.data
 					dispatch(addStoriesToLibrary([story]));
+				} catch (error) {
+					console.error('Ошибка при получении данных:', error);
+				}
+			}
+    }),
+		fetchHistoryByUserId: build.query<HistoryResponse, string>({
+      query: (userId) => `/history?userId=${userId}`,
+			async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+				try {
+					const { data: response } = await queryFulfilled;
+
+					const history = response?.data?.history
+					
+					dispatch(addHistory(history));
 				} catch (error) {
 					console.error('Ошибка при получении данных:', error);
 				}
@@ -60,4 +81,4 @@ export const storyAPI = createApi({
   }),
 });
 
-export const { useFetchAllStoriesQuery, useLoadStoryByIdQuery } = storyAPI;
+export const { useFetchAllStoriesQuery, useLoadStoryByIdQuery, useFetchHistoryByUserIdQuery} = storyAPI;

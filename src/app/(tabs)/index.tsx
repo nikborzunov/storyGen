@@ -63,6 +63,11 @@ const HomeScreen: React.FC = () => {
 
   const [fetchStories, { data: story, isLoading, error }] = storyAPI.useLazyFetchAllStoriesQuery();
 
+  storyAPI.useFetchHistoryByUserIdQuery(USER_ID, {
+    skip: false,
+    refetchOnMountOrArgChange: true
+  });
+
   useDidUpdate(() => {
     if (error) {
       let errorMessage: string;
@@ -105,7 +110,7 @@ const HomeScreen: React.FC = () => {
       );
       
       if (curStory && !viewedStorySet.has(curStory?.storyId)) {
-          historyParam.push({ storyId: curStory.storyId, title: curStory.title, userId: USER_ID });
+          historyParam.push({ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID });
       }
       
       const requestBody = {
@@ -123,7 +128,7 @@ const HomeScreen: React.FC = () => {
 
   useEffect(() => {
     if (storyIdFromHistory) {
-      const storyFromHistory = library?.find((item) => item.storyId?.replace(/^"|"$/g, '') === storyIdFromHistory?.replace(/^"|"$/g, ''));
+      const storyFromHistory = library?.find((item) => item?.storyId?.replace(/^"|"$/g, '') === storyIdFromHistory?.replace(/^"|"$/g, ''));
       if (storyFromHistory) {
         setTitle(storyFromHistory.title?.replace(/^"|"$/g, ''));
         setContentFromHistory(storyFromHistory.content);
@@ -151,8 +156,8 @@ const HomeScreen: React.FC = () => {
 
   useDidUpdate(() => {
     if (library && history) {
-        const viewedStoryIds = history?.map(item => item.storyId);
-        const unreadStoriesCount = library.filter(item => !viewedStoryIds.includes(item.storyId)).length;
+        const viewedStoryIds = history?.map(item => item?.storyId);
+        const unreadStoriesCount = library.filter(item => !viewedStoryIds.includes(item?.storyId)).length;
         setRemainingStories(unreadStoriesCount);
     }
   }, [library, history]);

@@ -10,7 +10,7 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
   const isTypingMode = toggleConfig['typingEffect']?.checked;
   const isDarkMode = toggleConfig['darkMode']?.checked;
-  const typingSpeed = 50;
+  const typingSpeed = 5;
 
   const togglePause = useCallback(() => {
     setIsPaused(prev => !prev);
@@ -73,8 +73,8 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     color: isDarkMode ? '#E0E0E0' : '#333',
-    textAlign: 'justify',
-    fontFamily: 'ofont.ru_Palatino-Normal',
+    textAlign: 'left',
+    fontFamily: 'Ariel',
   },
   pauseText: {
     fontSize: 16,
