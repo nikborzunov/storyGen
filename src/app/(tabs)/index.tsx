@@ -19,6 +19,7 @@ import { RouteProp, useRoute } from '@react-navigation/native';
 import { addHistory } from '@/src/store/reducers/StorySlice';
 import { useDispatch } from 'react-redux';
 import { DEFAULT_ERROR_MESSAGE } from '@/src/constants/errorMessages';
+import { useDidUpdate } from '@/src/hooks/useDidUpdate';
 
 type RootStackParamList = {
   HomeScreen: { storyId: string };
@@ -62,7 +63,7 @@ const HomeScreen: React.FC = () => {
 
   const [fetchStories, { data: story, isLoading, error }] = storyAPI.useLazyFetchAllStoriesQuery();
 
-  useEffect(() => {
+  useDidUpdate(() => {
     if (error) {
       let errorMessage: string;
   
@@ -88,9 +89,39 @@ const HomeScreen: React.FC = () => {
     setContent(curStory?.content?.replace(/^"|"$/g, ''));
   }, [library])
 
+  useDidUpdate(() => {
+
+    if (!isLoading && remainingStories < 1) {
+      setFetching(true);
+      setContentFromHistory(undefined);
+      setErrorMessage(null);
+
+      const viewedStorySet = new Set(history?.map(item => item?.storyId));
+      let historyParam = [...history] || [];
+
+      let curStory = library.find(item =>
+          !viewedStorySet.has(item?.storyId) &&
+          item?.title?.replace(/^"|"$/g, '') !== title
+      );
+      
+      if (curStory && !viewedStorySet.has(curStory?.storyId)) {
+          historyParam.push({ storyId: curStory.storyId, title: curStory.title, userId: USER_ID });
+      }
+      
+      const requestBody = {
+          themes,
+          viewedStories: historyParam,
+          userId: USER_ID,
+      };
+            
+      fetchStories(requestBody).unwrap();
+    } else {
+      setFetching(false);
+    }
+  }, [remainingStories, isLoading])
+
 
   useEffect(() => {
-
     if (storyIdFromHistory) {
       const storyFromHistory = library?.find((item) => item.storyId?.replace(/^"|"$/g, '') === storyIdFromHistory?.replace(/^"|"$/g, ''));
       if (storyFromHistory) {
@@ -118,7 +149,7 @@ const HomeScreen: React.FC = () => {
     animateTitleAndFetchData();
   }, []);
 
-  useEffect(() => {
+  useDidUpdate(() => {
     if (library && history) {
         const viewedStoryIds = history?.map(item => item.storyId);
         const unreadStoriesCount = library.filter(item => !viewedStoryIds.includes(item.storyId)).length;

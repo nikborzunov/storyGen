@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Animated } from 'react-native';
 import SelectBox from '@/src/components/buttons/selects/SelectBox';
 import { useNavigation } from '@react-navigation/native';
@@ -10,6 +10,7 @@ import ToggleConfig from '@/src/components/buttons/toggles/ToggleConfig';
 import LoaderView from '@/src/components/loaders/loaderView';
 import { getHistoryOptions, getSelectedThemes } from '@/src/store/selectors/selectors';
 import { useLoadStoryByIdQuery } from '@/src/services/StoryService';
+import { useDidUpdate } from '@/src/hooks/useDidUpdate';
 
 const Settings: React.FC = () => {
   const scrollY = new Animated.Value(0);
@@ -33,7 +34,7 @@ const Settings: React.FC = () => {
     skip: !storyId,
   });
 
-  useEffect(() => {
+  useDidUpdate(() => {
     if (!isLoading && storyId) {
       setFetching(true);
       const timer = setTimeout(() => {
@@ -47,7 +48,7 @@ const Settings: React.FC = () => {
     }
   }, [selectedHistory, isLoading, storyId, navigation]);
 
-  useEffect(() => {
+  useDidUpdate(() => {
     dispatch(chooseStoryTheme(selectedTheme));
   }, [selectedTheme, dispatch]);
 
