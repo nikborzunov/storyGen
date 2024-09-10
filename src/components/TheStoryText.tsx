@@ -1,7 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useAppSelector } from '@/src/hooks/redux';
+
+function processNewLines(text: string): string {
+  return text.replace(/\\n/g, '\n').replace(/'/g, '  ');
+};
 
 const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledButtons?: boolean }> = ({ contentFromHistory, disabledButtons }) => {
   const [displayedText, setDisplayedText] = useState<string>('');
@@ -21,10 +25,11 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
     setCurrentCharIndex(0);
     setIsPaused(false);
   }, [contentFromHistory]);
-  
+
   useEffect(() => {
     if (!isTypingMode) {
-      setDisplayedText(contentFromHistory || '');
+      const processedText = processNewLines(contentFromHistory || '');
+      setDisplayedText(processedText);
       setCurrentCharIndex(contentFromHistory?.length || 0);
       return;
     }
@@ -33,13 +38,20 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
   
     const timer = currentCharIndex < contentFromHistory.length ?
       setTimeout(() => {
-        setDisplayedText(prevText => prevText + contentFromHistory[currentCharIndex]);
-        setCurrentCharIndex(prevIndex => prevIndex + 1);
+        const nextChar = contentFromHistory[currentCharIndex];
+        const isSpecialSequence = nextChar === '\\' && contentFromHistory[currentCharIndex + 1] === 'n';
+        const isParagraph = nextChar === '\'';
+        if (isSpecialSequence) {
+          setDisplayedText(prevText => `${prevText}\n`);
+          setCurrentCharIndex(currentCharIndex + 2);
+        } else if (isParagraph) {
+          setDisplayedText(prevText => `${prevText}  `);
+          setCurrentCharIndex(currentCharIndex + 1);
+        } else {
+          setDisplayedText(prevText => prevText + nextChar);
+          setCurrentCharIndex(prevIndex => prevIndex + 1);
+        }
       }, typingSpeed) : null;
-
-    if((!contentFromHistory || currentCharIndex >= contentFromHistory?.length -1)) {
-      setIsPaused(true);
-    };
   
     return () => {
       if (timer) {
@@ -54,7 +66,7 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
     <TouchableWithoutFeedback onPress={togglePause}>
       <View style={styles.storyTextContainer}>
         <ThemedText style={styles.storyText}>{displayedText}</ThemedText>
-        {isTypingMode && (!disabledButtons && !(!contentFromHistory || currentCharIndex >= contentFromHistory?.length -1)) ? (
+        {!disabledButtons && isTypingMode && contentFromHistory && currentCharIndex < contentFromHistory?.length ? (
           <ThemedText style={isPaused ? styles.resumeText : styles.pauseText}>
             {isPaused ? 'Нажмите, чтобы продолжить' : 'Нажмите, чтобы приостановить'}
           </ThemedText>
@@ -74,7 +86,7 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     lineHeight: 24,
     color: isDarkMode ? '#E0E0E0' : '#333',
     textAlign: 'left',
-    fontFamily: 'Ariel',
+    fontFamily: 'Georgia',
   },
   pauseText: {
     fontSize: 16,
