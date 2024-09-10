@@ -8,7 +8,7 @@ import TheStoryText from '@/src/components/TheStoryText';
 import { useAppSelector } from '@/src/hooks/redux';
 import { storyAPI } from '@/src/services/StoryService';
 import LottieView from 'lottie-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -49,6 +49,7 @@ const HomeScreen: React.FC = () => {
   const isDarkMode = toggleConfig['darkMode']?.checked;
   const isGameMode = toggleConfig['gameMode']?.checked;
   const isScreenBlocked = toggleConfig['blockScreen']?.checked;
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const library = useAppSelector(state => state?.story?.library);
   const history = useAppSelector(state => state?.story?.history);
@@ -121,7 +122,10 @@ const HomeScreen: React.FC = () => {
             
       fetchStories(requestBody).unwrap();
     } else {
-      setFetching(false);
+      setFetching(true);
+      const timer = setTimeout(() => {
+        setFetching(false);
+      }, 1000);
     }
   }, [remainingStories, isLoading])
 
@@ -164,12 +168,15 @@ const HomeScreen: React.FC = () => {
 
   const handleNewStoryRequest = async () => {
     if (isScreenBlocked) return;
+
+    scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: true });
+
     setFetching(true);
     setContentFromHistory(undefined);
     setErrorMessage(null);
 
     const requestBody = {
-        themes: themes,
+        themes,
         viewedStories: history,
         userId: USER_ID,
     };
@@ -180,8 +187,8 @@ const HomeScreen: React.FC = () => {
         } else {
           const viewedStoryIds = history?.map((item) => item?.storyId);
 
-          const curStory: any = library.find((item) => 
-              !viewedStoryIds.includes(item?.storyId) && 
+          const curStory: any = library.find((item) =>
+              !viewedStoryIds.includes(item?.storyId) &&
               item?.title?.replace(/^"|"$/g, '') !== title
           );
 
@@ -194,8 +201,9 @@ const HomeScreen: React.FC = () => {
 
           setFetching(false);
         }
-    } catch (e) {
+    } catch (error) {
         setErrorMessage("Не удалось загрузить новую сказку. Пожалуйста, измените список тем или попробуйте снова позже.");
+        scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: true });
     } finally {
         setFetching(false);
     }
@@ -240,7 +248,10 @@ const HomeScreen: React.FC = () => {
         </Animated.View>
       }
       {title ? 
-      <ScrollView contentContainerStyle={styles.storyContainer}>
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={styles.storyContainer}
+      >
         <TheStoryText contentFromHistory={contentFromHistory || content} disabledButtons={isScreenBlocked}/>
       </ScrollView>
     :
