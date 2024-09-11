@@ -85,49 +85,50 @@ const HomeScreen: React.FC = () => {
     }
   }, [isLoading, error]);
 
-  useEffect(() => {
-    const curHistory = history?.map((item) => item?.storyId);
-    const curStory: any = library.find((item) => !curHistory.includes(item?.storyId));
-
-    addHistory([{ storyId: curStory?.storyId, title: curStory?.title?.replace(/^"|"$/g, ''), userId: USER_ID}])
-
-    setTitle(curStory?.title?.replace(/^"|"$/g, ''));
-    setContent(curStory?.content?.replace(/^"|"$/g, ''));
-  }, [library])
 
   useDidUpdate(() => {
 
-    if (!isLoading && remainingStories < 1) {
-      setFetching(true);
-      setContentFromHistory(undefined);
-      setErrorMessage(null);
+    if (!isLoading && library?.length) {
+      const viewedStoryIds = history?.map(item => item?.storyId);
+      const unreadStoriesCount = library.filter(item => !viewedStoryIds.includes(item?.storyId)).length;
 
-      const viewedStorySet = new Set(history?.map(item => item?.storyId));
-      let historyParam = [...history] || [];
+      if (unreadStoriesCount < 1) {
+        setFetching(true);
+        setContentFromHistory(undefined);
+        setErrorMessage(null);
 
-      let curStory = library.find(item =>
-          !viewedStorySet.has(item?.storyId) &&
-          item?.title?.replace(/^"|"$/g, '') !== title
-      );
-      
-      if (curStory && !viewedStorySet.has(curStory?.storyId)) {
-          historyParam.push({ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID });
-      }
-      
-      const requestBody = {
-          themes,
-          viewedStories: historyParam,
-          userId: USER_ID,
+        const viewedStorySet = new Set(history?.map(item => item?.storyId));
+        let historyParam = [...history] || [];
+
+        let curStory = library.find(item =>
+            !viewedStorySet.has(item?.storyId) &&
+            item?.title?.replace(/^"|"$/g, '') !== title
+        );
+        
+        if (curStory && !viewedStorySet.has(curStory?.storyId)) {
+            historyParam.push({ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID });
+        }
+        
+        const requestBody = {
+            themes,
+            viewedStories: historyParam,
+            userId: USER_ID,
+        };
+              
+        fetchStories(requestBody).unwrap();
+      } else if (library?.length === unreadStoriesCount) {
+        const curHistory = history?.map((item) => item?.storyId);
+        const curStory: any = library.find((item) => !curHistory.includes(item?.storyId));
+
+        if (curStory && !curHistory.includes(curStory?.storyId)) {
+            dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title?.replace(/^"|"$/g, ''), userId: USER_ID }]));
+        }
+
+        setTitle(curStory?.title?.replace(/^"|"$/g, ''));
+        setContent(curStory?.content?.replace(/^"|"$/g, ''));
       };
-            
-      fetchStories(requestBody).unwrap();
-    } else {
-      setFetching(true);
-      const timer = setTimeout(() => {
-        setFetching(false);
-      }, 1000);
     }
-  }, [remainingStories, isLoading])
+  }, [history?.length, library?.length, isLoading])
 
 
   useEffect(() => {
@@ -166,11 +167,28 @@ const HomeScreen: React.FC = () => {
     }
   }, [library, history]);
 
+  const addToHistory = () => {
+    const viewedStoryIds = history?.map((item) => item?.storyId);
+
+    const curStory = library.find((item) =>
+      !viewedStoryIds.includes(item?.storyId) &&
+        item?.title?.replace(/^"|"$/g, '') !== title
+    );
+
+    if (curStory) {
+      if (!viewedStoryIds.includes(curStory?.storyId)) {
+        dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID }]));
+
+        setTitle(curStory?.title?.replace(/^"|"$/g, ''));
+        setContent(curStory?.content?.replace(/^"|"$/g, ''));
+      }
+    };
+  };
+
   const handleNewStoryRequest = async () => {
     if (isScreenBlocked) return;
 
     scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: true });
-
     setFetching(true);
     setContentFromHistory(undefined);
     setErrorMessage(null);
@@ -185,21 +203,10 @@ const HomeScreen: React.FC = () => {
         if (library?.length < 1 || !title?.length || remainingStories < 1) {
             await fetchStories(requestBody).unwrap();
         } else {
-          const viewedStoryIds = history?.map((item) => item?.storyId);
 
-          const curStory: any = library.find((item) =>
-              !viewedStoryIds.includes(item?.storyId) &&
-              item?.title?.replace(/^"|"$/g, '') !== title
-          );
-
-          if (curStory) {
-            dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID }]));
-          };
-
-          setTitle(curStory?.title?.replace(/^"|"$/g, ''));
-          setContent(curStory?.content?.replace(/^"|"$/g, ''));
-
-          setFetching(false);
+          addToHistory();
+          
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
     } catch (error) {
         setErrorMessage("Не удалось загрузить новую сказку. Пожалуйста, измените список тем или попробуйте снова позже.");
