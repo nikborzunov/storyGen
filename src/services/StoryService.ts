@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { IHistory, IStory } from '../typing/story';
 import { addHistory, addStoriesToLibrary} from '../store/reducers/StorySlice';
 
-const API_URL = 'http://192.168.0.103:1001';
+const API_URL = 'http://192.168.0.102:1001';
 
 type IFetchStoryBody = {
 	themes: string[];
