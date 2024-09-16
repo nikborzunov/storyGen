@@ -24,7 +24,6 @@ import { useDidUpdate } from '@/src/hooks/useDidUpdate';
 type RootStackParamList = {
   HomeScreen: { storyId: string };
 };
-const USER_ID = '39430948143'
 
 const HomeScreen: React.FC = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -44,6 +43,7 @@ const HomeScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'HomeScreen'>>();
   const storyIdFromHistory = route.params?.storyId;
 
+  const userId = useAppSelector(state => state.auth.userId);
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
   const isDarkMode = toggleConfig['darkMode']?.checked;
@@ -64,8 +64,8 @@ const HomeScreen: React.FC = () => {
 
   const [fetchStories, { data: story, isLoading, error }] = storyAPI.useLazyFetchAllStoriesQuery();
 
-  storyAPI.useFetchHistoryByUserIdQuery(USER_ID, {
-    skip: false,
+  storyAPI.useFetchHistoryByUserIdQuery(userId || '', {
+    skip: !userId,
     refetchOnMountOrArgChange: true
   });
 
@@ -106,13 +106,13 @@ const HomeScreen: React.FC = () => {
         );
         
         if (curStory && !viewedStorySet.has(curStory?.storyId)) {
-            historyParam.push({ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID });
+          historyParam.push({ storyId: curStory?.storyId, title: curStory?.title, userId: userId || '' });
         }
         
         const requestBody = {
             themes,
             viewedStories: historyParam,
-            userId: USER_ID,
+            userId: userId,
         };
               
         fetchStories(requestBody).unwrap();
@@ -121,7 +121,7 @@ const HomeScreen: React.FC = () => {
         const curStory: any = library.find((item) => !curHistory.includes(item?.storyId));
 
         if (curStory && !curHistory.includes(curStory?.storyId)) {
-            dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title?.replace(/^"|"$/g, ''), userId: USER_ID }]));
+            dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title?.replace(/^"|"$/g, ''), userId: userId || '' }]));
         }
 
         setTitle(curStory?.title?.replace(/^"|"$/g, ''));
@@ -177,7 +177,7 @@ const HomeScreen: React.FC = () => {
 
     if (curStory) {
       if (!viewedStoryIds.includes(curStory?.storyId)) {
-        dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title, userId: USER_ID }]));
+        dispatch(addHistory([{ storyId: curStory?.storyId, title: curStory?.title, userId: userId || '' }]));
 
         setTitle(curStory?.title?.replace(/^"|"$/g, ''));
         setContent(curStory?.content?.replace(/^"|"$/g, ''));
@@ -196,7 +196,7 @@ const HomeScreen: React.FC = () => {
     const requestBody = {
         themes,
         viewedStories: history,
-        userId: USER_ID,
+        userId: userId,
     };
 
     try {

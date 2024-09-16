@@ -1,8 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { IHistory, IStory } from '../typing/story';
 import { addHistory, addStoriesToLibrary} from '../store/reducers/StorySlice';
+import * as WebBrowser from 'expo-web-browser';
+import Constants from 'expo-constants';
 
-const API_URL = 'http://192.168.0.102:1001';
+WebBrowser.maybeCompleteAuthSession();
+
+const extra = Constants.expoConfig?.extra || Constants.manifest?.extra;
 
 type IFetchStoryBody = {
 	themes: string[];
@@ -27,7 +31,7 @@ interface HistoryResponse {
 
 export const storyAPI = createApi({
 	reducerPath: 'storyAPI',
-	baseQuery: fetchBaseQuery({ baseUrl: API_URL }),
+	baseQuery: fetchBaseQuery({ baseUrl: extra?.API_URL }),
 	endpoints: (build) => ({
 		fetchAllStories: build.query<{data: IStoryLoadResponse}, IFetchStoryBody>({
 			query: (body) => ({

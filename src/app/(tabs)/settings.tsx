@@ -11,6 +11,7 @@ import LoaderView from '@/src/components/loaders/loaderView';
 import { getHistoryOptions, getSelectedThemes } from '@/src/store/selectors/selectors';
 import { useLoadStoryByIdQuery } from '@/src/services/StoryService';
 import { useDidUpdate } from '@/src/hooks/useDidUpdate';
+import Auth from '@/src/components/auth/Auth';
 
 const Settings: React.FC = () => {
   const scrollY = new Animated.Value(0);
@@ -74,108 +75,111 @@ const Settings: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.titleContainer, { top: 0, left: 0, right: 0 }]}>
-        <ThemedText type="title" style={styles.titleText}>Настройки</ThemedText>
-      </Animated.View>
-      
-      <Animated.ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={[styles.contentContainer, { marginTop: 100, paddingTop: 16 }]}
-        scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
-        keyboardShouldPersistTaps="always"
-      >
-        <View style={styles.userContainer}>
-          <ThemedText type="subtitle" style={styles.userText}>👤 Имя пользователя</ThemedText>
-        </View>
+        <Animated.View style={[styles.titleContainer, { top: 0, left: 0, right: 0 }]}>
+            <ThemedText type="title" style={styles.titleText}>Настройки</ThemedText>
+        </Animated.View>
         
-        <SelectBox
-          title='Темы сказок'
-          options={selectedThemesFromStore}
-          selected={selectedTheme}
-          onSelect={setSelectedTheme}
-          itemType='checkbox'
-          isDarkMode={isDarkMode}
-        />
-        
-        <SelectBox
-          title='История'
-          options={historyOptions}
-          selected={selectedHistory}
-          onSelect={handleSelectHistory}
-          itemType="link"
-          isDarkMode={isDarkMode}
-        />
-        
-        <ToggleConfig />
-      </Animated.ScrollView>
+        <Animated.ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={[styles.contentContainer, { marginTop: 100, paddingTop: 16 }]}
+            scrollEventThrottle={16}
+            onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: true }
+            )}
+            keyboardShouldPersistTaps="always"
+        >
+            <View style={styles.userContainer}>
+                <Auth isDarkMode={isDarkMode} />
+            </View>
+            
+            <SelectBox
+                title='Темы сказок'
+                options={selectedThemesFromStore}
+                selected={selectedTheme}
+                onSelect={setSelectedTheme}
+                itemType='checkbox'
+                isDarkMode={isDarkMode}
+            />
+            
+            <SelectBox
+                title='История'
+                options={historyOptions}
+                selected={selectedHistory}
+                onSelect={handleSelectHistory}
+                itemType="link"
+                isDarkMode={isDarkMode}
+            />
+            
+            <ToggleConfig />
+        </Animated.ScrollView>
     </View>
   );
 };
 
 const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: isDarkMode ? '#222222' : '#fafafa',
+      flex: 1,
+      backgroundColor: isDarkMode ? '#222222' : '#fafafa',
   },
   titleContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: 40,
-    paddingBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: isDarkMode ? '#333333' : '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: isDarkMode ? '#666666' : '#e0e0e0',
-    zIndex: 1,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      paddingTop: 40,
+      paddingBottom: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isDarkMode ? '#333333' : '#ffffff',
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#666666' : '#e0e0e0',
+      zIndex: 1,
+      shadowColor: '#000',
+      shadowOffset: {
+          width: 0,
+          height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 3.84,
+      elevation: 5,
   },
   titleText: {
-    fontSize: 32,
-    color: isDarkMode ? '#ffffff' : '#333333',
-    fontWeight: '700',
-    alignItems: 'center',
+      fontSize: 32,
+      color: isDarkMode ? '#ffffff' : '#333333',
+      fontWeight: '700',
+      alignItems: 'center',
   },
   contentContainer: {
-    marginTop: 110,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    paddingBottom: 120,
+      marginTop: 110,
+      paddingVertical: 24,
+      paddingHorizontal: 20,
+      paddingBottom: 120,
   },
   userContainer: {
-    marginBottom: 24,
+    marginBottom: 16,
     alignItems: 'center',
     backgroundColor: isDarkMode ? '#333333' : '#ffffff',
-    borderRadius: 10,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: isDarkMode ? '#555555' : '#dddddd',
   },
   userText: {
-    color: isDarkMode ? '#ffffff' : '#494949',
-    fontSize: 18,
-    fontWeight: '500',
-    alignItems: 'center',
+      color: isDarkMode ? '#ffffff' : '#494949',
+      fontSize: 20,
+      fontWeight: '600',
+      alignItems: 'center',
+      marginBottom: 8,
   },
 });
 
