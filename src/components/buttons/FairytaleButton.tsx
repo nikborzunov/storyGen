@@ -1,100 +1,95 @@
 import React, { useRef } from 'react';
-import { Animated, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { Animated, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 interface FairytaleButtonProps {
-    customText?: string;
-    onPress: () => void;
-    disabled?: boolean;
-    blocked?: boolean;
+  customText?: string;
+  onPress: () => void;
+  disabled?: boolean;
+  blocked?: boolean;
 }
 
 const FairytaleButton: React.FC<FairytaleButtonProps> = ({ customText, onPress, disabled = false, blocked = false }) => {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-    const handlePressIn = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 0.9,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
-    };
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
 
-    const handlePressOut = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 3,
-            useNativeDriver: true,
-        }).start();
-    };
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
 
-    let text;
+  let text;
 
-    if (blocked) {
-        text = 'Кнопка заблокирована';
-    } else if (disabled) {
-        text = 'Подождите...';
-    } else {
-        text = customText || 'Новая Сказка';
-    };
+  if (blocked) {
+    text = 'Заблокировано';
+  } else if (disabled) {
+    text = 'Загрузка...';
+  } else {
+    text = customText || 'Новая Сказка';
+  }
 
-    return (
-        <TouchableOpacity
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={!(disabled || blocked) ? onPress : undefined}
-            disabled={disabled || blocked}
-            activeOpacity={0.7}
+  return (
+    <TouchableOpacity
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={!(disabled || blocked) ? onPress : undefined}
+      disabled={disabled || blocked}
+      activeOpacity={0.85}
+    >
+      <Animated.View
+        style={[
+          styles.button,
+          (disabled || blocked) && styles.buttonDisabled,
+          { transform: [{ scale: scaleAnim }] }
+        ]}
+      >
+        <ThemedText
+          style={[
+            styles.buttonText,
+            (disabled || blocked) && styles.buttonTextDisabled
+          ]}
         >
-            <Animated.View
-                style={[
-                    styles.button,
-                    (disabled || blocked) && styles.buttonDisabled,  // Добавление стилей заблокированной кнопки
-                    { transform: [{ scale: scaleAnim }] }
-                ]}
-            >
-                <ThemedText
-                    style={[
-                        styles.buttonText,
-                        (disabled || blocked) && styles.buttonTextDisabled  // Добавление стилей для текста заблокированной кнопки
-                    ]}
-                >
-                    {text}
-                </ThemedText>
-            </Animated.View>
-        </TouchableOpacity>
-    );
+          {text}
+        </ThemedText>
+      </Animated.View>
+    </TouchableOpacity>
+  );
 };
 
 const styles = StyleSheet.create({
-    button: {
-        backgroundColor: '#DAA520',  // Основной золотистый фон для кнопки
-        padding: 15,  // Пространство внутри кнопки для комфортного нажатия
-        borderRadius: 30,  // Округленные формы, создающие мягкий визуальный эффект
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 20,
-        elevation: 6,  // Тень, чтобы кнопка "висела" над поверхностью
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.2,  // Легкая тень для эффекта глубины
-        shadowRadius: 8,
-        minWidth: 120,  // Минимальная ширина, чтобы все текстовые варианты вниз подходили
-    },
-    buttonText: {
-        fontSize: 18,  // Чуть меньший шрифт для хорошей читаемости
-        fontWeight: 'bold',
-        color: '#FFFFFF',  // Белый цвет для контрастного текста
-        textShadowColor: 'rgba(0, 0, 0, 0.25)',  // Легкая тень на тексте для эффекта тиснения
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
-    },
-    buttonDisabled: {
-        backgroundColor: '#B8A089',  // Приглушенная версия фона для заблокированного состояния
-    },
-    buttonTextDisabled: {
-        color: '#D7D2C8',  // Более приглушенный цвет текста для заблокированного состояния
-    },
+  button: {
+    backgroundColor: '#FF9F1C',
+    borderRadius: 5,
+    paddingVertical: 14,
+    width: SCREEN_WIDTH,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  buttonDisabled: {
+    backgroundColor: '#BEBEBE',
+  },
+  buttonTextDisabled: {
+    color: '#EAEAEA',
+  },
 });
 
 export default FairytaleButton;

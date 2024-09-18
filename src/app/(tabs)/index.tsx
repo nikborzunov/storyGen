@@ -18,7 +18,6 @@ const HomeScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'HomeScreen'>>();
   const storyIdFromHistory = route.params?.storyId;
 
-  // Хук для получения данных о сказке
   const { title, content, isLoading, handleNewStoryRequest, errorMessage, errorStatus } = useStoryData(storyIdFromHistory);
 
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
@@ -26,10 +25,8 @@ const HomeScreen: React.FC = () => {
   const isDarkMode = toggleConfig['darkMode']?.checked;
   const isScreenBlocked = toggleConfig['blockScreen']?.checked;
 
-  // Список тем для фильтрации историй
   const themes: string[] = selectedThemesFromStore?.filter(item => item.checked).map(item => item.name) ?? [];
 
-  // Генерация стилей
   const styles = getStyles(isDarkMode);
 
   if (isLoading) {
@@ -66,41 +63,35 @@ const HomeScreen: React.FC = () => {
   );
 };
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 const getStyles = (isDarkMode: boolean) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: SCREEN_WIDTH * 0.045,  // Чуть меньшие боковые отступы для большего пространства
-      paddingVertical: SCREEN_HEIGHT * 0.02,   // Уменьшенный вертикальный отступ, чтобы лучше использовать высоту
-      backgroundColor: isDarkMode ? '#121212' : '#F7F7F7',  // Более мягкий светлый фон или тёмный для режима
+      marginTop: 20,
+      backgroundColor: '#FAF3E0',
     },
     storyContainer: {
-      flex: 0.85,  // Займем 75% экрана под историю, оставив достаточно места для кнопки
+      flex: 0.92,
       justifyContent: 'center',
-      backgroundColor: isDarkMode ? '#2B2B2B' : '#FFFFFF', // Комфортный для восприятия фон
+      backgroundColor: isDarkMode ? '#2B2B2B' : '#FFFFFF',
       borderRadius: 16,
-      padding: SCREEN_WIDTH * 0.05,
-      elevation: 3,
-      shadowColor: isDarkMode ? '#000' : '#AAA', // Разные тени для каждой темы
-      shadowOffset: { width: 0, height: 4 },
+      marginTop: 20,
+      elevation: 2,
+      shadowColor: isDarkMode ? '#000' : '#AAA',
+      shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.1,
-      shadowRadius: 10,
-      overflow: 'hidden',
+      shadowRadius: 6,
     },
     scrollView: {
-      maxHeight: SCREEN_HEIGHT * 0.65, // Ограничиваем высоту scrollView контейнера
+      maxHeight: SCREEN_HEIGHT * 0.7,
     },
     buttonContainer: {
-      flex: 0.15,  // Оставляем около 15% высоты для кнопки
+      flex: 0.08,
       alignItems: 'center',
-      justifyContent: 'flex-end',  // Кнопка расположена ближе к нижней границе
-      marginBottom: SCREEN_HEIGHT * 0.02,  // Отступ между кнопкой и нижней частью экрана
-    },
-    buttonAlignment: {
-      marginBottom: isDarkMode ? SCREEN_HEIGHT * 0.04 : SCREEN_HEIGHT * 0.05,  // Чуть более глубокое расположение кнопки
+      justifyContent: 'flex-end',
+      marginBottom: SCREEN_HEIGHT * 0.01,
     },
   });
 

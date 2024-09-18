@@ -223,6 +223,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   loader: {
+    marginTop: 10,
     marginLeft: 8,
   },
   actionContainer: {
