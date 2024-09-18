@@ -39,6 +39,7 @@ export const authSlice = createSlice({
             state.refreshToken = null;
             state.userId = null;
             state.email = null;
+            state.error = null;
         },
         setAuthError(state, action: PayloadAction<string>) {
             state.error = action.payload;
@@ -51,4 +52,4 @@ export const authSlice = createSlice({
 
 export default authSlice.reducer;
 
-export const { login, logout, setAuthError } = authSlice.actions;
+export const { login, logout, setAuthError, clearSuccessMessage } = authSlice.actions;

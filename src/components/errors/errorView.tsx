@@ -7,10 +7,14 @@ import {
 import LottieView from 'lottie-react-native';
 import FairytaleButton from '../buttons/FairytaleButton';
 import { useAppSelector } from '@/src/hooks/redux';
+import { DEFAULT_ERROR_MESSAGE } from '@/src/constants/errorMessages';
+import { useNavigation } from 'expo-router';
 
-const ErrorView = ({ onRetry, errorMessage }: { onRetry: () => void; errorMessage: string }) => {
+const ErrorView = ({ onRetry, errorMessage, errorStatus }: { onRetry: () => void; errorMessage?: string, errorStatus?: string }) => {
   const [isDirty, setDirty] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
+
+  const navigation = useNavigation<any>();
 
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
   const isDarkMode = toggleConfig['darkMode']?.checked;
@@ -19,6 +23,12 @@ const ErrorView = ({ onRetry, errorMessage }: { onRetry: () => void; errorMessag
     setDirty(true);
     onRetry();
   };
+
+  const hasCyrillic = (text: string) => {
+    return /[а-яА-ЯЁё]/.test(text);
+  };
+
+  const displayMessage = hasCyrillic(errorMessage || '') ? errorMessage : DEFAULT_ERROR_MESSAGE;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -34,6 +44,10 @@ const ErrorView = ({ onRetry, errorMessage }: { onRetry: () => void; errorMessag
     return () => clearTimeout(timer);
   }, []);
 
+  const handleLoginRedirect = () => {
+    navigation.navigate('settings', { isAuthModalOpen: true});
+  };
+
   const styles = getStyles(isDarkMode);
 
   return (
@@ -45,9 +59,13 @@ const ErrorView = ({ onRetry, errorMessage }: { onRetry: () => void; errorMessag
         style={styles.loaderAnimation}
       />
       <Animated.Text style={[styles.loadingText, { opacity: fadeAnim }]}>
-        {errorMessage}
+        { String(errorStatus) === '401' ? "Вы не авторизованы" : displayMessage}
       </Animated.Text>
-      <FairytaleButton customText={'Обновить'} onPress={retryOnError} disabled={isDirty} />
+      {errorMessage?.includes("не авторизованы") || errorMessage?.includes("userId must be a string") || String(errorStatus) === '401' ? (
+        <FairytaleButton customText={'Авторизоваться'} onPress={handleLoginRedirect} />
+      ) : (
+        <FairytaleButton customText={'Обновить'} onPress={retryOnError} disabled={isDirty} />
+      )}
     </View>
   );
 };

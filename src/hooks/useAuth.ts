@@ -3,6 +3,7 @@ import * as Keychain from 'react-native-keychain';
 import { useRefreshTokenMutation } from '@/src/services/AuthService'; 
 import { logout } from '@/src/store/reducers/AuthSlice';
 import { jwtDecode } from 'jwt-decode';
+import { resetStoryState } from '../store/reducers/StorySlice';
 
 const useAuth = () => {
   const dispatch = useDispatch();
@@ -13,11 +14,9 @@ const useAuth = () => {
 
     if (credentials) {
       const refreshTokenValue = credentials.password;
-      console.log('Используемый токен обновления');
 
       try {
         const result = await refreshTokenMutation({ refreshToken: refreshTokenValue }).unwrap();
-        console.log('Получен новый токен доступа');
 
         await Keychain.setGenericPassword(result.accessToken, refreshTokenValue);
         return result.accessToken;
@@ -41,11 +40,8 @@ const useAuth = () => {
 
         const currentTime = Date.now() / 1000;
         if (decodedToken.exp && decodedToken.exp < currentTime) {
-          console.log('Токен истек, обновляем токен.');
           return await refreshAccessToken();
-        } else {
-          console.log('Токен всё ещё действителен.');
-        }
+        };
       } catch (error) {
         console.error('Ошибка декодирования токена:', error);
         handleLogout();
@@ -57,8 +53,8 @@ const useAuth = () => {
   };
 
   const handleLogout = async () => {
-    console.log('Выход из системы. Сбрасываем учетные данные.');
     await Keychain.resetGenericPassword();
+    dispatch(resetStoryState());
     dispatch(logout());
   };
 

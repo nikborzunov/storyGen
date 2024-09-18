@@ -3,6 +3,7 @@ import { IHistory, IStory } from '../typing/story';
 import { addHistory, addStoriesToLibrary} from '../store/reducers/StorySlice';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
+import { AuthState } from '../store/reducers/AuthSlice';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -29,9 +30,23 @@ interface HistoryResponse {
 	};
 }
 
+const baseQuery = fetchBaseQuery({ 
+	baseUrl: extra?.API_URL,
+	prepareHeaders: (headers, { getState }) => {
+			const state = getState() as { auth: AuthState };
+			const token = state.auth.accessToken;
+
+			if (token) {
+					headers.set('Authorization', `Bearer ${token}`);
+			}
+
+			return headers;
+	}
+});
+
 export const storyAPI = createApi({
 	reducerPath: 'storyAPI',
-	baseQuery: fetchBaseQuery({ baseUrl: extra?.API_URL }),
+	baseQuery: baseQuery,
 	endpoints: (build) => ({
 		fetchAllStories: build.query<{data: IStoryLoadResponse}, IFetchStoryBody>({
 			query: (body) => ({

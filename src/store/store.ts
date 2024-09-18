@@ -3,21 +3,21 @@ import storyReducer from './reducers/StorySlice';
 import settingsReducer from './reducers/SettingsSlice';
 import authReducer from './reducers/AuthSlice';
 import { storyAPI } from '../services/StoryService';
-import { authAPI } from '../services/AuthService'; // Убедитесь, что импортируете authAPI
+import { authAPI } from '../services/AuthService';
 
 const rootReducer = combineReducers({
 	story: storyReducer,
 	settings: settingsReducer,
 	auth: authReducer,
 	[storyAPI.reducerPath]: storyAPI.reducer,
-	[authAPI.reducerPath]: authAPI.reducer, // Добавляем authAPI.reducer в rootReducer
+	[authAPI.reducerPath]: authAPI.reducer,
 });
 
 export const setupStore = () => {
 	return configureStore({
 		reducer: rootReducer,
 		middleware: (getDefaultMiddleware) =>
-			getDefaultMiddleware().concat(storyAPI.middleware, authAPI.middleware) //Добавляем middleware authAPI
+		getDefaultMiddleware().concat(storyAPI.middleware, authAPI.middleware),
 	});
 };
 

@@ -8,10 +8,15 @@ import Constants from 'expo-constants';
 import { useGoogleLoginMutation } from '@/src/services/AuthService';
 import * as Keychain from 'react-native-keychain';
 import { useDispatch, useSelector } from 'react-redux';
-import { notifyError } from '@/src/store/reducers/NotificationsSlice';
 import { authSlice, AuthState } from '@/src/store/reducers/AuthSlice';
 import useAuth from '@/src/hooks/useAuth';
 import { UserResponse } from '@/src/typing/user';
+import { useNavigation } from 'expo-router';
+import { RouteProp, useRoute } from '@react-navigation/native';
+
+type SettingsParamList = {
+  Settings: { isAuthModalOpen: boolean };
+};
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -23,8 +28,12 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
     androidClientId: extra?.GOOGLE_CLIENT_ID_ANDROID,
   };
 
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<SettingsParamList, 'Settings'>>();
+  const isAuthModalOpen = route.params?.isAuthModalOpen;
+
   const [request, response, promptAsync] = Google.useAuthRequest(config);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(isAuthModalOpen);
   const [login, { isLoading }] = useGoogleLoginMutation();
   const dispatch = useDispatch();
   const { isAuthenticated, email } = useSelector((state: { auth: AuthState }) => state.auth);
@@ -48,6 +57,16 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
     }
   }, [response]);
 
+  useEffect(() => {
+    setModalVisible(isAuthModalOpen);
+  }, [isAuthModalOpen]);
+  
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      navigation.setParams({ isAuthModalOpen: undefined } as any);
+    }
+  }, [modalVisible]); 
+
   const handleToken = async (idToken: string, accessToken: string) => {
     try {
       const userResponse: UserResponse = await login({ idToken, accessToken }).unwrap();
@@ -67,7 +86,6 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
     } catch (error) {
       console.error('Ошибка аутентификации: ', error);
       showError("Ошибка при авторизации. Проверьте ваши данные.");
-      dispatch(notifyError("Не удалось авторизоваться. Пожалуйста, попробуйте снова."));
     }
   };
 

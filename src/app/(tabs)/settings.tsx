@@ -19,6 +19,8 @@ const Settings: React.FC = () => {
   const dispatch = useAppDispatch();
   const [fetching, setFetching] = useState(false);
 
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
+
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
   const isDarkMode = toggleConfig.darkMode?.checked;
 
@@ -102,14 +104,16 @@ const Settings: React.FC = () => {
                 isDarkMode={isDarkMode}
             />
             
-            <SelectBox
-                title='История'
-                options={historyOptions}
-                selected={selectedHistory}
-                onSelect={handleSelectHistory}
-                itemType="link"
-                isDarkMode={isDarkMode}
-            />
+            { isAuthenticated && (
+                <SelectBox
+                    title='История'
+                    options={historyOptions}
+                    selected={selectedHistory}
+                    onSelect={handleSelectHistory}
+                    itemType="link"
+                    isDarkMode={isDarkMode}
+                />
+            )}
             
             <ToggleConfig />
         </Animated.ScrollView>

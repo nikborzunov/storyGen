@@ -4,7 +4,7 @@ interface StoryState {
   library: IStory[];
   history: IHistory[];
 	isLoading: boolean;
-	error: string;
+	error: string | null;
 }
 
 const initialState: StoryState = {
@@ -31,6 +31,12 @@ export const storySlice = createSlice({
         }
       });
     },
+    resetStoryState(state) {
+      state.library = [];
+      state.history = [];
+      state.isLoading = false;
+      state.error = null;
+    },
     storiesFetching(state) {
       return {
         ...state,
@@ -56,4 +62,4 @@ export const storySlice = createSlice({
 
 export default storySlice.reducer;
 
-export const { addStoriesToLibrary, addHistory, storiesFetching, storiesFetchingSuccess, storiesFetchingError } = storySlice.actions;
+export const { addStoriesToLibrary, addHistory, resetStoryState } = storySlice.actions;
