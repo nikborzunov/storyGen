@@ -79,24 +79,27 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
 const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   storyTextContainer: {
     padding: 15,
-    backgroundColor: isDarkMode ? '#121212' : '#FFFFFF',
+    backgroundColor: '#FAF3E0', // Бежевый фон, продолжающий стилистику бумаги
+    borderColor: '#D0B490', // Более насыщенный контур для текста
+    borderWidth: 1,
+    borderRadius: 8,
   },
   storyText: {
-    fontSize: 18,
+    fontSize: 16,
     lineHeight: 24,
-    color: isDarkMode ? '#E0E0E0' : '#333',
-    textAlign: 'left',
-    fontFamily: 'Georgia',
+    color: '#4B3933', // Более спокойный, теплый цвет текста
+    fontFamily: 'Courier', // Машинописный шрифт для выделения "печатаемого" текста
+    textAlign: 'justify',
   },
   pauseText: {
     fontSize: 16,
-    color: isDarkMode ? '#FFA07A' : '#FF4500',
+    color: '#D2691E', // Цвет "пауз" выделим мягким коричневым
     textAlign: 'center',
     marginTop: 10,
   },
   resumeText: {
     fontSize: 16,
-    color: isDarkMode ? '#44944A' : '#228B22',
+    color: '#8FBC8F', // Зеленый для продолжения в позитивной интонации
     textAlign: 'center',
     marginTop: 10,
   },
