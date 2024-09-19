@@ -79,7 +79,7 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
 const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   storyTextContainer: {
     padding: 15,
-    backgroundColor: '#FAF3E0',
+    backgroundColor: isDarkMode ? '#f5e8c6' : '#FAF3E0',
     borderColor: '#D0B490',
     borderWidth: 1,
     borderRadius: 8,
@@ -89,7 +89,7 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     lineHeight: 24,
     color: '#4B3933',
     fontFamily: 'Courier',
-    textAlign: 'justify',
+    textAlign: 'left',
   },
   pauseText: {
     fontSize: 16,

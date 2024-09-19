@@ -3,7 +3,6 @@ import { StyleSheet, View, Dimensions } from 'react-native';
 import TheStoryText from '../TheStoryText';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 interface StoryContentProps {
   content: string;
@@ -25,7 +24,7 @@ const getStyles = (isDarkMode: boolean) => {
   return StyleSheet.create({
     storyContainer: {
       borderRadius: 10,  
-      backgroundColor: '#FAF3E0',
+      backgroundColor: isDarkMode ? '#f5e8c6' : '#FAF3E0',
       elevation: 3,
       shadowColor: isDarkMode ? '#000' : '#DDD',
       shadowOffset: { width: 0, height: 3 },
@@ -44,7 +43,7 @@ const getStyles = (isDarkMode: boolean) => {
     linkText: {
       color: '#E8614D',  
       marginTop: 12,
-      textAlign: 'center',
+      textAlign: 'left',
       textDecorationLine: 'underline',
     },
   });

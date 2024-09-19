@@ -14,12 +14,25 @@ type RootStackParamList = {
   HomeScreen: { storyId: string };
 };
 
+const getErrorStatus = (errorStatus: string | undefined, isAuthenticated: boolean): string => {
+  if (errorStatus) {
+    return errorStatus;
+  }
+
+  if (!isAuthenticated) {
+    return '401';
+  }
+
+  return '';
+};
+
 const HomeScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'HomeScreen'>>();
   const storyIdFromHistory = route.params?.storyId;
 
   const { title, content, isLoading, handleNewStoryRequest, errorMessage, errorStatus } = useStoryData(storyIdFromHistory);
 
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
   const toggleConfig = useAppSelector(state => state.settings.toggleConfig);
   const isDarkMode = toggleConfig['darkMode']?.checked;
@@ -33,15 +46,15 @@ const HomeScreen: React.FC = () => {
     return <LoaderView />;
   }
 
-  if (errorMessage) {
+  if (errorMessage || !isAuthenticated) {
     return (
       <ErrorView
         onRetry={() => handleNewStoryRequest(themes, isScreenBlocked)}
         errorMessage={errorMessage || DEFAULT_ERROR_MESSAGE}
-        errorStatus={errorStatus || ''}
+        errorStatus={getErrorStatus(errorStatus || '', isAuthenticated)}
       />
     );
-  }
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -54,10 +67,18 @@ const HomeScreen: React.FC = () => {
         />
       </View>
       <View style={styles.buttonContainer}>
-        <FairytaleButton
-          onPress={() => handleNewStoryRequest(themes, isScreenBlocked)}
-          blocked={isScreenBlocked}
-        />
+        { title ?
+        ( <FairytaleButton
+            onPress={() => handleNewStoryRequest(themes, isScreenBlocked)}
+            blocked={isScreenBlocked}
+          /> ) 
+        :
+        ( <FairytaleButton
+            onPress={() => handleNewStoryRequest(themes, isScreenBlocked)}
+            blocked={isScreenBlocked}
+            customText='Загрузить сказку'
+            animation='pulse'
+          /> )}
       </View>
     </ThemedView>
   );
@@ -70,14 +91,13 @@ const getStyles = (isDarkMode: boolean) =>
     container: {
       flex: 1,
       marginTop: 20,
-      backgroundColor: '#FAF3E0',
+      backgroundColor: isDarkMode ? '#f5e8c6' : '#FAF3E0',
     },
     storyContainer: {
       flex: 0.92,
       justifyContent: 'center',
       backgroundColor: isDarkMode ? '#2B2B2B' : '#FFFFFF',
-      borderRadius: 16,
-      marginTop: 20,
+      borderRadius: 5,
       elevation: 2,
       shadowColor: isDarkMode ? '#000' : '#AAA',
       shadowOffset: { width: 0, height: 3 },

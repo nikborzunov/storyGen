@@ -56,7 +56,6 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
       if (isScreenBlocked || fetching) return;
 
       if (unreadStories.length > 0) {
-        console.log('Берем следующую непрочитанную историю из Store.');
         setStory(unreadStories[0]);
 
         const selectedStory = unreadStories[0];
@@ -67,13 +66,11 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
         return;
       }
 
-      console.log('Все сказки прочитаны. Загружаем новые с сервера...');
       setFetching(true);
       setErrorMessage(null);
       setErrorStatus(null);
 
       const requestBody = { themes, viewedStories: history, userId: userId ?? '' };
-      console.log('Запрос на сервер:', requestBody);
 
       try {
         await fetchStories(requestBody).unwrap();
@@ -98,11 +95,8 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
 
   useEffect(() => {
     if (isAuthenticated && userId) {
-
-      console.log('Пользователь авторизован, можно загрузить историю просмотров и очистить ошибки.');
       setErrorMessage(null);
-
-    }
+    };
   }, [isAuthenticated, userId]);
 
   return {

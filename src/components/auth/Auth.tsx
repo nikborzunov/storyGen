@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Modal, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { ThemedText } from '@/src/components/ThemedText';
@@ -13,10 +13,7 @@ import useAuth from '@/src/hooks/useAuth';
 import { UserResponse } from '@/src/typing/user';
 import { useNavigation } from 'expo-router';
 import { RouteProp, useRoute } from '@react-navigation/native';
-
-type SettingsParamList = {
-  Settings: { isAuthModalOpen: boolean };
-};
+import { SettingsParamList } from '@/src/typing/settings';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -33,12 +30,17 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   const isAuthModalOpen = route.params?.isAuthModalOpen;
 
   const [request, response, promptAsync] = Google.useAuthRequest(config);
-  const [modalVisible, setModalVisible] = useState(isAuthModalOpen);
+  const [modalVisible, setModalVisible] = useState(false);
   const [login, { isLoading }] = useGoogleLoginMutation();
   const dispatch = useDispatch();
   const { isAuthenticated, email } = useSelector((state: { auth: AuthState }) => state.auth);
   
   const { checkTokenExpiry, handleLogout } = useAuth();
+
+  const getBackgroundColor = useCallback(() => {
+    if (modalVisible || isAuthModalOpen) return '#6c757d';
+    return isDarkMode ? '#0056b3' : '#007bff';
+  }, [modalVisible, route.params?.isAuthModalOpen, isDarkMode]);
 
   useEffect(() => {
     const updateToken = async () => {
@@ -58,7 +60,9 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   }, [response]);
 
   useEffect(() => {
-    setModalVisible(isAuthModalOpen);
+    if (isAuthModalOpen) {
+      setModalVisible(true);
+    };
   }, [isAuthModalOpen]);
   
   useEffect(() => {
@@ -100,7 +104,7 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
           <TouchableOpacity
             style={[
               styles.googleButton,
-              { backgroundColor: isDarkMode ? '#0056b3' : '#007bff' },
+              { backgroundColor: getBackgroundColor() },
             ]}
             onPress={() => setModalVisible(true)}
             disabled={!request}>

@@ -83,7 +83,7 @@ const Settings: React.FC = () => {
         
         <Animated.ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={[styles.contentContainer, { marginTop: 100, paddingTop: 16 }]}
+            contentContainerStyle={[styles.contentContainer, { marginTop: 80, paddingTop: 10 }]}
             scrollEventThrottle={16}
             onScroll={Animated.event(
                 [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -125,14 +125,15 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
   container: {
       flex: 1,
       backgroundColor: isDarkMode ? '#222222' : '#fafafa',
+      marginTop: 20,
   },
   titleContainer: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
-      paddingTop: 40,
-      paddingBottom: 20,
+      paddingTop: 20,
+      paddingBottom: 15,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: isDarkMode ? '#333333' : '#ffffff',

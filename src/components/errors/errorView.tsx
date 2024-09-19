@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Animated,
+  Dimensions,
   StyleSheet,
   View,
 } from 'react-native';
@@ -9,6 +10,11 @@ import FairytaleButton from '../buttons/FairytaleButton';
 import { useAppSelector } from '@/src/hooks/redux';
 import { DEFAULT_ERROR_MESSAGE } from '@/src/constants/errorMessages';
 import { useNavigation } from 'expo-router';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+ const notAuthorizedUserMessage = `Вы не авторизованы.
+  Пожалуйста, авторизуйтесь чтобы загрузить сказку`
 
 const ErrorView = ({ onRetry, errorMessage, errorStatus }: { onRetry: () => void; errorMessage?: string, errorStatus?: string }) => {
   const [isDirty, setDirty] = useState(false);
@@ -59,12 +65,23 @@ const ErrorView = ({ onRetry, errorMessage, errorStatus }: { onRetry: () => void
         style={styles.loaderAnimation}
       />
       <Animated.Text style={[styles.loadingText, { opacity: fadeAnim }]}>
-        { String(errorStatus) === '401' ? "Вы не авторизованы" : displayMessage}
+        { String(errorStatus) === '401' ? notAuthorizedUserMessage : displayMessage}
       </Animated.Text>
-      {errorMessage?.includes("не авторизованы") || errorMessage?.includes("userId must be a string") || String(errorStatus) === '401' ? (
-        <FairytaleButton customText={'Авторизоваться'} onPress={handleLoginRedirect} />
+      { errorMessage?.includes("не авторизованы") || errorMessage?.includes("userId must be a string") || String(errorStatus) === '401' ? (
+        <FairytaleButton
+          customText={'Авторизоваться'}
+          customWidth={SCREEN_WIDTH / 2}
+          onPress={handleLoginRedirect}
+          animation='pulse'
+        />
       ) : (
-        <FairytaleButton customText={'Обновить'} onPress={retryOnError} disabled={isDirty} />
+        <FairytaleButton
+          customText={'Обновить'}
+          customWidth={SCREEN_WIDTH / 2}
+          onPress={retryOnError}
+          disabled={isDirty}
+          animation='pulse'
+        />
       )}
     </View>
   );
@@ -90,6 +107,7 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     lineHeight: 30,
     fontFamily: 'VezitsaCyrillic',
     marginTop: 20,
+    marginBottom: 20,
   },
 });
 

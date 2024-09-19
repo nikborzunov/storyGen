@@ -1,24 +1,27 @@
 import React from 'react';
-import { ThemedText } from '@/src/components/ThemedText';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import { StyleSheet, View, Dimensions, Animated } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 interface StoryTitleProps {
   title: string;
   isDarkMode: boolean;
+  animatedFontSize: Animated.AnimatedInterpolation<number>;
 }
 
-const StoryTitle: React.FC<StoryTitleProps> = ({ title, isDarkMode }) => {
+const StoryTitle: React.FC<StoryTitleProps> = ({ title, isDarkMode, animatedFontSize }) => {
   const styles = getStyles(isDarkMode);
 
   return (
     <View style={styles.container}>
       {title ? (
-        <ThemedText style={styles.title}>{title}</ThemedText>
+        <Animated.Text style={[styles.title, { fontSize: animatedFontSize }]}>
+          {title}
+        </Animated.Text>
       ) : (
-        <ThemedText style={styles.emptyTitle}>{'Хочешь сказку?'}</ThemedText>
+        <Animated.Text style={[styles.emptyTitle, { fontSize: animatedFontSize }]}>
+          {'Хочешь сказку?'}
+        </Animated.Text>
       )}
     </View>
   );
@@ -31,27 +34,22 @@ const getStyles = (isDarkMode: boolean) => {
   return StyleSheet.create({
     container: {
       alignItems: 'center',
-      marginTop: SCREEN_HEIGHT * 0.01,
-      marginBottom: SCREEN_HEIGHT * 0.01, 
     },
     title: {
-      fontSize: SCREEN_WIDTH * 0.07,
       fontWeight: 'bold',
       color: titleColor,
-      textAlign: 'center', 
+      textAlign: 'center',
       lineHeight: SCREEN_WIDTH * 0.08,
       fontFamily: 'VezitsaCyrillic',
       textShadowColor: textOutlineColor,
-
       shadowOpacity: 1,
       textShadowRadius: 4,
       textShadowOffset: { width: 2, height: 2 },
     },
     emptyTitle: {
-      fontSize: SCREEN_WIDTH * 0.075,
       fontWeight: 'bold',
-      color: titleColor, 
-      textAlign: 'center', 
+      color: titleColor,
+      textAlign: 'center',
       lineHeight: SCREEN_WIDTH * 0.09,
       fontFamily: 'VezitsaCyrillic',
       textShadowColor: textOutlineColor,
