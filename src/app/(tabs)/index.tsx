@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Dimensions } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import TheStory from '@/src/components/story/TheStory';
@@ -9,6 +9,7 @@ import { useAppSelector } from '@/src/hooks/redux';
 import { DEFAULT_ERROR_MESSAGE } from '@/src/constants/errorMessages';
 import ErrorView from '@/src/components/errors/errorView';
 import useStoryData from '@/src/hooks/useStoryData';
+import { useDidUpdate } from '@/src/hooks/useDidUpdate';
 
 type RootStackParamList = {
   HomeScreen: { storyId: string };
@@ -38,6 +39,14 @@ const HomeScreen: React.FC = () => {
   const isDarkMode = toggleConfig['darkMode']?.checked;
   const isScreenBlocked = toggleConfig['blockScreen']?.checked;
 
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+
+  useDidUpdate(() => {
+    if (!isInitialized) {
+      setIsInitialized(true);
+    }
+  }, []);
+
   const themes: string[] = selectedThemesFromStore?.filter(item => item.checked).map(item => item.name) ?? [];
 
   const styles = getStyles(isDarkMode);
@@ -46,7 +55,7 @@ const HomeScreen: React.FC = () => {
     return <LoaderView />;
   }
 
-  if (errorMessage || !isAuthenticated) {
+  if (errorMessage || (isInitialized && !isAuthenticated)) {
     return (
       <ErrorView
         onRetry={() => handleNewStoryRequest(themes, isScreenBlocked)}

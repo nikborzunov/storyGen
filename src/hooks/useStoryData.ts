@@ -29,20 +29,17 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
   );
 
   const currentStory = useMemo(() => {
-    if (storyIdFromHistory) {
-      return library.find(story => story.storyId === storyIdFromHistory);
-    }
-    return unreadStories[0] || null;
+    return storyIdFromHistory
+      ? library.find(story => story.storyId === storyIdFromHistory)
+      : unreadStories[0] || null;
   }, [storyIdFromHistory, unreadStories, library]);
 
   const [title, setTitle] = useState(currentStory?.title || '');
   const [content, setContent] = useState(currentStory?.content || '');
 
   const setStory = useCallback((story: IStory) => {
-    if (story) {
-      setTitle(story.title || '');
-      setContent(story.content || '');
-    }
+    setTitle(story.title || '');
+    setContent(story.content || '');
   }, []);
 
   useEffect(() => {
@@ -51,20 +48,25 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
     }
   }, [currentStory, setStory]);
 
+  const processNewStories = async (newStories: IStory[]) => {
+    const uniqueNewStories = newStories.filter(story => !viewedStoryIds.includes(story.storyId));
+
+    if (uniqueNewStories.length) {
+      const nextUnreadStory = uniqueNewStories[0];
+
+      await dispatch(addHistory([{ 
+        storyId: nextUnreadStory.storyId, 
+        title: nextUnreadStory.title, 
+        userId: userId || '' 
+      }]));
+
+      setStory(nextUnreadStory);
+    };
+  };
+
   const handleNewStoryRequest = useCallback(
     async (themes: string[], isScreenBlocked: boolean) => {
       if (isScreenBlocked || fetching) return;
-
-      if (unreadStories.length > 0) {
-        setStory(unreadStories[0]);
-
-        const selectedStory = unreadStories[0];
-        dispatch(
-          addHistory([{ storyId: selectedStory.storyId, title: selectedStory.title, userId: userId || '' }])
-        );
-
-        return;
-      }
 
       setFetching(true);
       setErrorMessage(null);
@@ -73,16 +75,42 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
       const requestBody = { themes, viewedStories: history, userId: userId ?? '' };
 
       try {
-        await fetchStories(requestBody).unwrap();
+        if (unreadStories.length > 0) {
+          const currentIndex = library.findIndex(story => story.storyId === currentStory?.storyId);
+          const nextStoryIndex = currentIndex + 1;
+
+          if (nextStoryIndex >= unreadStories.length) {
+
+            const response = await fetchStories(requestBody).unwrap();
+
+            await processNewStories(response.data.stories);
+          } else {
+            const selectedStory = unreadStories[nextStoryIndex];
+            if (selectedStory) {
+
+              await dispatch(addHistory([{ 
+                storyId: selectedStory.storyId, 
+                title: selectedStory.title, 
+                userId: userId || '' 
+              }]));
+
+              setStory(selectedStory);
+            };
+          };
+        } else {
+          const response = await fetchStories(requestBody).unwrap();
+          
+          await processNewStories(response.data.stories);
+        };
       } catch (err) {
         console.error('Ошибка загрузки сказки:', (err as any)?.message);
         setErrorMessage('Ошибка загрузки сказки. Попробуйте позже.');
         setErrorStatus((err as any)?.status);
       } finally {
         setFetching(false);
-      }
+      };
     },
-    [unreadStories, history, userId, setStory, fetching, fetchStories, dispatch]
+    [unreadStories, history, userId, setStory, fetching, fetchStories, dispatch, currentStory, library]
   );
 
   useEffect(() => {
