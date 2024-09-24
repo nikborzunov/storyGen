@@ -10,6 +10,7 @@ import { DEFAULT_ERROR_MESSAGE } from '@/src/constants/errorMessages';
 import ErrorView from '@/src/components/errors/errorView';
 import useStoryData from '@/src/hooks/useStoryData';
 import { useDidUpdate } from '@/src/hooks/useDidUpdate';
+import StoryAudioPlayer from '@/src/components/player/StoryAudioPlayer';
 
 type RootStackParamList = {
   HomeScreen: { storyId: string };
@@ -31,7 +32,7 @@ const HomeScreen: React.FC = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'HomeScreen'>>();
   const storyIdFromHistory = route.params?.storyId;
 
-  const { title, content, isLoading, handleNewStoryRequest, errorMessage, errorStatus } = useStoryData(storyIdFromHistory);
+  const { title, content, audioUrl, isLoading, handleNewStoryRequest, errorMessage, errorStatus } = useStoryData(storyIdFromHistory);
 
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const selectedThemesFromStore = useAppSelector(state => state?.settings?.selectedThemes);
@@ -75,6 +76,9 @@ const HomeScreen: React.FC = () => {
           isDarkMode={isDarkMode}
         />
       </View>
+      <View style={styles.audioContainer}>
+        <StoryAudioPlayer audioUrl={audioUrl} />
+      </View>
       <View style={styles.buttonContainer}>
         { title ?
         ( <FairytaleButton
@@ -103,7 +107,7 @@ const getStyles = (isDarkMode: boolean) =>
       backgroundColor: isDarkMode ? '#f5e8c6' : '#FAF3E0',
     },
     storyContainer: {
-      flex: 0.92,
+      flex: 0.8,
       justifyContent: 'center',
       backgroundColor: isDarkMode ? '#2B2B2B' : '#FFFFFF',
       borderRadius: 5,
@@ -116,11 +120,15 @@ const getStyles = (isDarkMode: boolean) =>
     scrollView: {
       maxHeight: SCREEN_HEIGHT * 0.7,
     },
+    audioContainer: {
+      flex: 0.1,
+      justifyContent: 'center',
+    },
     buttonContainer: {
-      flex: 0.08,
+      flex: 0.1,
       alignItems: 'center',
-      justifyContent: 'flex-end',
-      marginBottom: SCREEN_HEIGHT * 0.01,
+      justifyContent: 'center',
+      paddingHorizontal: 20,
     },
   });
 

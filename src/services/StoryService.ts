@@ -22,6 +22,7 @@ type IStoryLoadByIdResponse = {
   storyId: string;
   title: string;
   content: string;
+	audioUrl: string;
 };
 
 interface HistoryResponse {

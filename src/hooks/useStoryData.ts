@@ -36,10 +36,12 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
 
   const [title, setTitle] = useState(currentStory?.title || '');
   const [content, setContent] = useState(currentStory?.content || '');
+  const [audioUrl, setAudio] = useState(currentStory?.title || '');
 
   const setStory = useCallback((story: IStory) => {
     setTitle(story.title || '');
     setContent(story.content || '');
+    setAudio(story.audioUrl);
   }, []);
 
   useEffect(() => {
@@ -130,6 +132,7 @@ const useStoryData = (storyIdFromHistory: string | undefined) => {
   return {
     title,
     content,
+    audioUrl,
     isLoading: isLoading || fetching,
     errorMessage,
     errorStatus,
