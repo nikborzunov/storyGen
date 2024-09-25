@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { View, TouchableWithoutFeedback } from 'react-native';
+import { View, TouchableWithoutFeedback, Animated, Easing, TextStyle } from 'react-native';
 import { ThemedText } from '@/src/components/ThemedText';
 import { useAppSelector } from '@/src/hooks/redux';
 import { selectTypingModeAndDarkMode } from '../store/selectors/selectors';
@@ -24,9 +24,10 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { isTypingMode, isDarkMode } = useAppSelector(selectTypingModeAndDarkMode);
-
   const isAudioPlaying = useAppSelector(state => state.story.isAudioPlaying);
   const typingSpeed = 50;
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     displayedTextRef.current = '';
@@ -82,11 +83,40 @@ const TheStoryText: React.FC<{ contentFromHistory: string | undefined, disabledB
 
   const styles = useMemo(() => getStyles(isDarkMode), [isDarkMode]);
 
+  useEffect(() => {
+    if (isTypingMode && !isAudioPlaying) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.05,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1.0,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ]),
+      ).start();
+    } else {
+      pulseAnim.setValue(1); 
+    }
+  }, [isTypingMode, isAudioPlaying]);
+
   return (
     <TouchableWithoutFeedback onPress={toggleUserPause}>
       <View style={styles.storyTextContainer}>
         <MemoizedText styles={styles} text={displayedTextRef.current} />
-        {!disabledButtons && isTypingMode && contentFromHistory && currentCharIndex < contentFromHistory.length ? (
+        { !isAudioPlaying && isTypingMode && currentCharIndex === 0 && (
+          <Animated.Text 
+            style={[styles.basicTextStyle, { transform: [{ scale: pulseAnim }] }]}>
+            Нажмите "Воспроизвести аудио", чтобы начать историю
+          </Animated.Text>
+        )}
+        {!disabledButtons && isTypingMode && contentFromHistory && currentCharIndex < contentFromHistory.length && currentCharIndex > 0 ? (
           <ThemedText style={isUserPaused ? styles.resumeText : styles.pauseText}>
             {isUserPaused ? 'Нажмите, чтобы продолжить' : 'Нажмите, чтобы приостановить'}
           </ThemedText>
@@ -127,6 +157,15 @@ const getStyles = (isDarkMode: boolean) => ({
     textAlign: 'center' as const,
     marginTop: 10,
   },
+  basicTextStyle: {
+    fontSize: 18,
+    lineHeight: 28,
+    color: '#4B3933',
+    fontFamily: 'Courier-Bold',
+    textAlign: 'center' as const,
+    marginBottom: 10,
+    marginHorizontal: 20,
+  } as TextStyle,
 });
 
 const MemoizedTheStoryText = React.memo(TheStoryText, (prevProps, nextProps) => {
