@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Animated } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, ActivityIndicator, TouchableOpacity, Text, StyleSheet, Dimensions, Animated } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
 import RNFS from 'react-native-fs';
 import Sound from 'react-native-sound';
-import { AntDesign } from '@expo/vector-icons';
+import { useDispatch } from 'react-redux';
+import { setAudioPlayingState } from '@/src/store/reducers/StorySlice';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -18,6 +20,7 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
   const [isPaused, setIsPaused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch();
 
   const styles = getStyles(isDarkMode);
 
@@ -30,7 +33,10 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
 
   useEffect(() => {
     return () => {
-      soundInstance && soundInstance.release();
+      if (soundInstance) {
+        soundInstance.release();
+        dispatch(setAudioPlayingState(false));
+      };
     };
   }, [soundInstance]);
 
@@ -38,19 +44,16 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
     try {
       setLoading(true);
       const audioPath = `${RNFS.DocumentDirectoryPath}/story_audio.mp3`;
-
       await RNFS.downloadFile({ fromUrl: url, toFile: audioPath }).promise;
       const fileExists = await RNFS.exists(audioPath);
 
       if (fileExists) {
-        console.log('File downloaded successfully.');
         setAudioFilePath(audioPath);
       } else {
-        throw new Error('File does not exist after download');
+        throw new Error('Файл не был загружен.');
       }
     } catch (err) {
-      console.error('File download error:', err);
-      setError('Ошибка при сохранении аудио');
+      setError('Ошибка при загрузке аудио');
     } finally {
       setLoading(false);
     }
@@ -59,38 +62,32 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
   const playAudio = () => {
     if (!audioFilePath || loading) return;
 
+    dispatch(setAudioPlayingState(true));
+
     if (!soundInstance) {
       setLoading(true);
-
       const newSound = new Sound(audioFilePath, undefined, (error) => {
         setLoading(false);
 
         if (!error) {
-          console.log('Audio initialized.');
+          setIsPlaying(true);
+          dispatch(setAudioPlayingState(true));
           newSound.play((success) => {
             if (success) {
-              console.log('Audio finished successfully.');
-            } else {
-              console.error('Audio playback failed.');
+              resetAudioState();
             }
-            resetAudioState();
+            dispatch(setAudioPlayingState(false));
           });
-          
           setSoundInstance(newSound);
-          setIsPlaying(true);
         } else {
-          console.error('Failed to load sound:', error);
           setError('Ошибка при воспроизведении аудио');
         }
       });
     } else if (soundInstance && isPaused) {
       soundInstance.play((success) => {
         if (success) {
-          console.log('Audio resumed successfully.');
-        } else {
-          console.error('Failed to resume audio.');
+          resetAudioState();
         }
-        resetAudioState();
       });
       setIsPlaying(true);
       setIsPaused(false);
@@ -102,17 +99,19 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
       soundInstance.pause();
       setIsPlaying(false);
       setIsPaused(true);
+      dispatch(setAudioPlayingState(false));
     }
   };
 
   const stopAndResetAudio = () => {
     if (soundInstance) {
-      soundInstance.stop(() => resetAudioState());
+      soundInstance.stop(() => {
+        resetAudioState();
+      });
     }
   };
 
   const resetAudioState = () => {
-    console.log('Resetting audio state.');
     setIsPlaying(false);
     setIsPaused(false);
     if (soundInstance) {
@@ -125,7 +124,6 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
     <View style={styles.container}>
       {loading && <ActivityIndicator size="small" color={isDarkMode ? '#FFA500' : '#DAA520'} />}
       {error && <Text style={styles.errorText}>{error}</Text>}
-
       {!loading && !isPlaying && (
         <AudioButton
           title={isPaused ? 'Продолжить аудио' : 'Воспроизвести аудио'}
@@ -138,7 +136,7 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
 
       {isPlaying && (
         <AudioButton
-          title="Пауза"
+          title={'Пауза'}
           icon="pausecircleo"
           onPress={pauseAudio}
           isDarkMode={isDarkMode}
@@ -232,10 +230,17 @@ const getStyles = (isDarkMode: boolean) =>
       shadowRadius: 4,
     },
     iconContainer: {
-      shadowColor: isDarkMode ? 'rgba(255, 165, 0, 0.5)' : 'rgba(218, 165, 32, 0.5)',
+      backgroundColor: isDarkMode ? '#2B2B2B' : '#FFFFFF',
+      borderRadius: 20,
+      shadowColor: 'rgba(218, 165, 32, 0.5)',
       shadowOffset: { width: 0, height: 0 },
       shadowRadius: 10,
       shadowOpacity: 0.8,
+      width: 30,
+      height: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 4,
     },
     buttonText: {
       fontSize: SCREEN_WIDTH * 0.035,

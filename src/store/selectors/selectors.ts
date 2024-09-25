@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect';
 import { RootState } from '../store';
+import { selectStoryState } from '../reducers/StorySlice';
 
 export const getHistoryOptions = createSelector(
   (state: RootState) => state.story.history,
@@ -21,3 +22,37 @@ export const getSelectedThemes = createSelector(
     }));
   }
 );
+
+export const selectLibrary = createSelector(
+  [selectStoryState],
+  (storyState) => storyState.library
+);
+
+export const selectHistory = createSelector(
+  [selectStoryState],
+  (storyState) => storyState.history
+);
+
+export const selectIsLoading = createSelector(
+  [selectStoryState],
+  (storyState) => storyState.isLoading
+);
+
+export const selectError = createSelector(
+  [selectStoryState],
+  (storyState) => storyState.error
+);
+
+export const selectIsAudioPlaying = createSelector(
+  [selectStoryState],
+  (storyState) => storyState.isAudioPlaying
+);
+
+export const selectToggleConfig = (state: RootState) => state.settings.toggleConfig;
+
+export const selectTypingModeAndDarkMode = createSelector([selectToggleConfig], (config) => {
+  return {
+    isTypingMode: config?.typingEffect?.checked ?? false,
+    isDarkMode: config?.darkMode?.checked ?? false,
+  };
+});

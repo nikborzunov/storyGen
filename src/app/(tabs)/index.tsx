@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import TheStory from '@/src/components/story/TheStory';
 import FairytaleButton from '@/src/components/buttons/FairytaleButton';
@@ -50,7 +50,7 @@ const HomeScreen: React.FC = () => {
 
   const themes: string[] = selectedThemesFromStore?.filter(item => item.checked).map(item => item.name) ?? [];
 
-  const styles = getStyles(isDarkMode);
+  const styles = getStyles(isDarkMode, Boolean(title));
 
   if (isLoading) {
     return <LoaderView />;
@@ -76,9 +76,11 @@ const HomeScreen: React.FC = () => {
           isDarkMode={isDarkMode}
         />
       </View>
-      <View style={styles.audioContainer}>
-        <StoryAudioPlayer audioUrl={audioUrl} />
-      </View>
+      { title && (
+        <View style={styles.audioContainer}>
+          <StoryAudioPlayer audioUrl={audioUrl} />
+        </View>
+      )}
       <View style={styles.buttonContainer}>
         { title ?
         ( <FairytaleButton
@@ -97,9 +99,7 @@ const HomeScreen: React.FC = () => {
   );
 };
 
-const SCREEN_HEIGHT = Dimensions.get('window').height;
-
-const getStyles = (isDarkMode: boolean) =>
+const getStyles = (isDarkMode: boolean, hasTitle: boolean) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -107,7 +107,7 @@ const getStyles = (isDarkMode: boolean) =>
       backgroundColor: isDarkMode ? '#f5e8c6' : '#FAF3E0',
     },
     storyContainer: {
-      flex: 0.8,
+      flex: 1,
       justifyContent: 'center',
       backgroundColor: isDarkMode ? '#2B2B2B' : '#FFFFFF',
       borderRadius: 5,
@@ -117,15 +117,13 @@ const getStyles = (isDarkMode: boolean) =>
       shadowOpacity: 0.1,
       shadowRadius: 6,
     },
-    scrollView: {
-      maxHeight: SCREEN_HEIGHT * 0.7,
-    },
     audioContainer: {
-      flex: 0.1,
+      flexShrink: 0,
       justifyContent: 'center',
+      display: hasTitle ? 'flex' : 'none',
     },
     buttonContainer: {
-      flex: 0.1,
+      flexShrink: 0,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 20,
