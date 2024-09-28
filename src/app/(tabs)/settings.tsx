@@ -6,18 +6,19 @@ import { ThemedText } from '@/src/components/ThemedText';
 import { useAppDispatch, useAppSelector } from '@/src/hooks/redux';
 import { chooseStoryTheme } from '@/src/store/reducers/SettingsSlice';
 import { ISelectOption } from '@/src/typing/settings';
-import ToggleConfig from '@/src/components/buttons/toggles/ToggleConfig';
 import LoaderView from '@/src/components/loaders/loaderView';
 import { getHistoryOptions, getSelectedThemes } from '@/src/store/selectors/selectors';
 import { useLoadStoryByIdQuery } from '@/src/services/StoryService';
 import { useDidUpdate } from '@/src/hooks/useDidUpdate';
 import Auth from '@/src/components/auth/Auth';
+import ToggleConfigList from '@/src/components/buttons/toggles/ToggleConfig';
 
 const Settings: React.FC = () => {
   const scrollY = new Animated.Value(0);
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
   const [fetching, setFetching] = useState(false);
+  const [isToggleExpanded, setToggleExpanded] = useState(false);
 
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
 
@@ -115,7 +116,7 @@ const Settings: React.FC = () => {
                 />
             )}
             
-            <ToggleConfig />
+            <ToggleConfigList isExpanded={isToggleExpanded} toggleExpand={() => setToggleExpanded(prev => !prev)} />
         </Animated.ScrollView>
     </View>
   );
@@ -178,13 +179,6 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
     elevation: 3,
     borderWidth: 1,
     borderColor: isDarkMode ? '#555555' : '#dddddd',
-  },
-  userText: {
-      color: isDarkMode ? '#ffffff' : '#494949',
-      fontSize: 20,
-      fontWeight: '600',
-      alignItems: 'center',
-      marginBottom: 8,
   },
 });
 
