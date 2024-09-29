@@ -12,6 +12,7 @@ import { useLoadStoryByIdQuery } from '@/src/services/StoryService';
 import { useDidUpdate } from '@/src/hooks/useDidUpdate';
 import Auth from '@/src/components/auth/Auth';
 import ToggleConfigList from '@/src/components/buttons/toggles/ToggleConfig';
+import PremiumFeaturesList from '@/src/components/premiumFeatures/premiumFeaturesList';
 
 const Settings: React.FC = () => {
   const scrollY = new Animated.Value(0);
@@ -19,6 +20,7 @@ const Settings: React.FC = () => {
   const dispatch = useAppDispatch();
   const [fetching, setFetching] = useState(false);
   const [isToggleExpanded, setToggleExpanded] = useState(false);
+  const [isPremiumExpanded, setPremiumExpanded] = useState(false);
 
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
 
@@ -117,6 +119,13 @@ const Settings: React.FC = () => {
             )}
             
             <ToggleConfigList isExpanded={isToggleExpanded} toggleExpand={() => setToggleExpanded(prev => !prev)} />
+            
+            <PremiumFeaturesList
+              isExpanded={isPremiumExpanded}
+              toggleExpand={() => setPremiumExpanded(prev => !prev)}
+              isDarkMode={isDarkMode}
+            />
+    
         </Animated.ScrollView>
     </View>
   );

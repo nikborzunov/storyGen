@@ -24,7 +24,7 @@ const ToggleConfigList: React.FC<ToggleConfigListProps> = ({ isExpanded, toggleE
 	const styles = getStyles(isDarkMode);
 
 	return (
-		<View>
+		<View style={styles.mainContainer}>
 			<TouchableOpacity style={styles.selectBoxCurrent} onPress={toggleExpand}>
 				<View style={styles.selectBoxValue}>
 					<ThemedText type="default" style={styles.title}>Конфигурации</ThemedText>
@@ -55,6 +55,9 @@ const ToggleConfigList: React.FC<ToggleConfigListProps> = ({ isExpanded, toggleE
 };
 
 const getStyles = (isDarkMode: boolean) => StyleSheet.create({
+	mainContainer: {
+		marginBottom: 15,
+	},
 	container: {
 		padding: 16,
 		backgroundColor: isDarkMode ? '#222222' : '#fafafa',

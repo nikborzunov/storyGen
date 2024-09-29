@@ -6,6 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ISelectOption } from '@/src/typing/settings';
 import { v4 as uuidv4 } from 'uuid';
+import CloseButton from '../styledButtons/CloseButton';
 
 const ANIMATION_TYPE = 'fade';
 const SEARCH_PLACEHOLDER = 'Search...';
@@ -161,8 +162,8 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            <TouchableOpacity style={styles.closeButton} onPress={toggleList}>
-              <MaterialIcons name="close" size={28} color={isDarkMode ? "#ffffff" : "#333333"} />
+            <TouchableOpacity style={styles.closeButton}>
+                <CloseButton isDarkMode={isDarkMode} onPress={toggleList} />
             </TouchableOpacity>
             <TextInput
               style={styles.searchInput}
@@ -352,17 +353,6 @@ const getStyles = (isDarkMode: boolean, getButtonTextSize: number) => StyleSheet
       position: 'absolute',
       top: -20,
       right: -20,
-      backgroundColor: isDarkMode ? '#444444' : '#FFFFFF',
-      borderRadius: 50,
-      padding: 8,
-      elevation: 2,
-      shadowColor: isDarkMode ? '#000' : '#000000',
-      shadowOffset: {
-          width: 0,
-          height: 2,
-      },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
   },
 });
 
