@@ -18,7 +18,7 @@ import { SettingsParamList } from '@/src/typing/settings';
 WebBrowser.maybeCompleteAuthSession();
 
 const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
-  const extra = Constants.expoConfig?.extra || Constants.manifest?.extra;
+  const extra = Constants.expoConfig?.extra || (Constants.manifest as any)?.extra;
   const config = {
     iosClientId: extra?.GOOGLE_CLIENT_ID_IOS,
     webClientId: extra?.GOOGLE_CLIENT_ID_WEB,
@@ -29,7 +29,7 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   const route = useRoute<RouteProp<SettingsParamList, 'Settings'>>();
   const isAuthModalOpen = route.params?.isAuthModalOpen;
 
-  const [request, response, promptAsync] = Google.useAuthRequest(config);
+  const [request, response, promptAsync] = Google.useAuthRequest(config, { native: 'com.nikborzunov.storyGen://' });
   const [modalVisible, setModalVisible] = useState(false);
   const [login, { isLoading }] = useGoogleLoginMutation();
   const dispatch = useDispatch();

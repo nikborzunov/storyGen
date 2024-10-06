@@ -80,10 +80,10 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
 
   const handleTempSelect = useCallback((option: ISelectOption) => {
     setTempSelected(prevSelected => {
-      const isSelected = prevSelected.some(item => item.value === option.value);
+      const isSelected = prevSelected?.some(item => item?.value === option?.value);
       return isSelected 
-        ? prevSelected.filter(item => item.value !== option.value)
-        : [...prevSelected, { ...option, checked: true }];
+        ? prevSelected?.filter(item => item?.value !== option?.value)
+        : [...(prevSelected ? prevSelected : []), { ...option, checked: true }];
     });
   }, []);
 
@@ -183,7 +183,7 @@ const SelectBox: React.FC<SelectBoxProps> = memo(({
                   <View style={styles.optionContainer}>
                     {itemType === 'checkbox' && (
                       <MaterialIcons
-                        name={tempSelected.some(s => s.value === item.value) ? "check-box" : "check-box-outline-blank"}
+                        name={tempSelected?.some(s => s.value === item.value) ? "check-box" : "check-box-outline-blank"}
                         size={24}
                         color={isDarkMode ? '#ffffff' : '#000000'}
                       />

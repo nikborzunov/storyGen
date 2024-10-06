@@ -3,7 +3,7 @@ import { ThemedText } from '../../ThemedText';
 import { StyleSheet, View } from 'react-native';
 
 const RoleDescription: React.FC<{ isDarkMode: boolean; selectedRole: string; name: string; roles: any[] }> = ({ isDarkMode, selectedRole, name, roles }) => {
-    const role = roles.find(r => r.name === selectedRole);
+    const role = roles.find(r => r.value === selectedRole);
 
     const styles = getStyles(isDarkMode);
 

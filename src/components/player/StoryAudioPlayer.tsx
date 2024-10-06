@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, TouchableOpacity, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import RNFS from 'react-native-fs';
-import Sound from 'react-native-sound';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS, AVPlaybackStatus } from 'expo-av';
 import { useDispatch } from 'react-redux';
 import { setAudioPlayingState } from '@/src/store/reducers/StorySlice';
+import * as FileSystem from 'expo-file-system';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -14,110 +14,123 @@ interface StoryAudioPlayerProps {
 }
 
 const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMode = false }) => {
-  const [audioFilePath, setAudioFilePath] = useState<string | null>(null);
-  const [soundInstance, setSoundInstance] = useState<Sound | null>(null);
+  const dispatch = useDispatch();
+  const soundObjectRef = useRef<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const dispatch = useDispatch();
 
   const styles = getStyles(isDarkMode);
 
   useEffect(() => {
-    stopAndResetAudio();
-    if (audioUrl) {
-      downloadAndSetAudio(audioUrl);
-    }
+    handleAudioUrlChange(audioUrl);
   }, [audioUrl]);
 
   useEffect(() => {
     return () => {
-      if (soundInstance) {
-        soundInstance.release();
-        dispatch(setAudioPlayingState(false));
-      };
+      stopAndResetAudio();
+      dispatch(setAudioPlayingState(false));
     };
-  }, [soundInstance]);
+  }, [dispatch]);
+
+  const handleAudioUrlChange = async (url: string) => {
+    await stopAndResetAudio();
+    await downloadAndSetAudio(url);
+  };
+
+  const stopAndResetAudio = async () => {
+    if (soundObjectRef.current) {
+      await soundObjectRef.current.stopAsync();
+      await soundObjectRef.current.unloadAsync();
+      soundObjectRef.current = null;
+    }
+  };
 
   const downloadAndSetAudio = async (url: string) => {
     try {
       setLoading(true);
-      const audioPath = `${RNFS.DocumentDirectoryPath}/story_audio.mp3`;
-      await RNFS.downloadFile({ fromUrl: url, toFile: audioPath }).promise;
-      const fileExists = await RNFS.exists(audioPath);
+      const audioPath = `${FileSystem.documentDirectory}/story_audio.mp3`;
+      const { uri } = await FileSystem.downloadAsync(url, audioPath);
+      const fileExists = await FileSystem.getInfoAsync(uri);
 
-      if (fileExists) {
-        setAudioFilePath(audioPath);
+      if (fileExists.exists) {
+        await loadAudio(uri);
       } else {
         throw new Error('Файл не был загружен.');
       }
     } catch (err) {
-      setError('Ошибка при загрузке аудио');
+      handleError('Ошибка при загрузке аудио', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const playAudio = () => {
-    if (!audioFilePath || loading) return;
+  const loadAudio = async (uri: string) => {
+    const newSound = new Audio.Sound();
+    soundObjectRef.current = newSound;
 
-    dispatch(setAudioPlayingState(true));
-
-    if (!soundInstance) {
-      setLoading(true);
-      const newSound = new Sound(audioFilePath, undefined, (error) => {
-        setLoading(false);
-
-        if (!error) {
-          setIsPlaying(true);
-          dispatch(setAudioPlayingState(true));
-          newSound.play((success) => {
-            if (success) {
-              resetAudioState();
-            }
-            dispatch(setAudioPlayingState(false));
-          });
-          setSoundInstance(newSound);
-        } else {
-          setError('Ошибка при воспроизведении аудио');
-        }
-      });
-    } else if (soundInstance && isPaused) {
-      soundInstance.play((success) => {
-        if (success) {
-          resetAudioState();
-        }
-      });
-      setIsPlaying(true);
-      setIsPaused(false);
+    try {
+      await newSound.loadAsync({ uri });
+    } catch (error) {
+      handleError('Ошибка при воспроизведении аудио', error);
     }
   };
 
-  const pauseAudio = () => {
-    if (soundInstance && isPlaying) {
-      soundInstance.pause();
+  const playAudio = async () => {
+    if (loading || !soundObjectRef.current) return;
+
+    dispatch(setAudioPlayingState(true));
+
+    try {
+      await setAudioMode();
+      await soundObjectRef.current.playAsync();
+      setIsPlaying(true);
+      setIsPaused(false);
+
+      soundObjectRef.current.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
+        if ('didJustFinish' in status && status.didJustFinish) {
+          resetAudioState();
+        }
+      });
+    } catch (error) {
+      handleError('Ошибка при воспроизведении аудио', error);
+    }
+  };
+
+  const pauseAudio = async () => {
+    if (soundObjectRef.current && isPlaying) {
+      await soundObjectRef.current.pauseAsync();
       setIsPlaying(false);
       setIsPaused(true);
       dispatch(setAudioPlayingState(false));
     }
   };
 
-  const stopAndResetAudio = () => {
-    if (soundInstance) {
-      soundInstance.stop(() => {
-        resetAudioState();
-      });
-    }
-  };
-
   const resetAudioState = () => {
     setIsPlaying(false);
     setIsPaused(false);
-    if (soundInstance) {
-      soundInstance.release();
-      setSoundInstance(null);
+    if (soundObjectRef.current) {
+      soundObjectRef.current.unloadAsync();
+      soundObjectRef.current = null;
     }
+  };
+
+  const handleError = (message: string, error: any) => {
+    console.error(message, error);
+    setError(message);
+  };
+
+  const setAudioMode = async () => {
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      staysActiveInBackground: true,
+      interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: false,
+      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      playThroughEarpieceAndroid: false,
+    });
   };
 
   return (
@@ -131,6 +144,7 @@ const StoryAudioPlayer: React.FC<StoryAudioPlayerProps> = ({ audioUrl, isDarkMod
           onPress={playAudio}
           isDarkMode={isDarkMode}
           isPlaying={isPlaying}
+          disabled={isPlaying}
         />
       )}
 
@@ -153,9 +167,10 @@ interface AudioButtonProps {
   onPress: () => void;
   isDarkMode: boolean;
   isPlaying: boolean;
+  disabled?: boolean;
 }
 
-const AudioButton: React.FC<AudioButtonProps> = ({ title, icon, onPress, isDarkMode, isPlaying }) => {
+const AudioButton: React.FC<AudioButtonProps> = ({ title, icon, onPress, isDarkMode, isPlaying, disabled }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -192,7 +207,7 @@ const AudioButton: React.FC<AudioButtonProps> = ({ title, icon, onPress, isDarkM
   };
 
   return (
-    <TouchableOpacity onPress={onPress} style={getStyles(isDarkMode).button}>
+    <TouchableOpacity onPress={onPress} style={getStyles(isDarkMode).button} disabled={disabled}>
       <Animated.View style={[{ transform: [{ scale: pulseAnim }] }, getStyles(isDarkMode).iconContainer]}>
         <AntDesign name={icon} size={30} color={isDarkMode ? '#FFA500' : '#DAA520'} />
       </Animated.View>

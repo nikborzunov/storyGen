@@ -9,5 +9,4 @@ export interface ReadAloudSectionProps {
 	selectedRole: string | null;
 	name: string;
 	roles: Array<{ name: string; value: string }>;
-	styles: any;
 };

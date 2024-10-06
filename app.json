@@ -13,20 +13,39 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.nikborzunov.storyGen",
       "supportsTablet": true,
-      "bundleIdentifier": "com.nikborzunov.storyGen"
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.453382941318-kgbs1075r6ifvmq4cokrp4cusloi9nf8",
+              "storyGen"
+            ]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.nikborzunov.storyGen"
+      "package": "com.nikborzunov.storyGen",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "storyGen"
+          },
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./src/assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
@@ -39,7 +58,7 @@
        "GOOGLE_CLIENT_ID_WEB": "453382941318-cnlibeu160h4oje0hsioool3rn43o2bi.apps.googleusercontent.com",
        "GOOGLE_CLIENT_ID_IOS": "453382941318-kgbs1075r6ifvmq4cokrp4cusloi9nf8.apps.googleusercontent.com",
        "GOOGLE_CLIENT_SECRET": "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",
-       "API_URL": "http://192.168.0.102:1001"
+       "API_URL": "http://192.168.0.104:1001"
     }
   }
 }

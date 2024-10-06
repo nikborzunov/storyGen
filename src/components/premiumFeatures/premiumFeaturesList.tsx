@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Modal, Animated } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Animated } from 'react-native';
 import { ThemedText } from '../ThemedText';
 import VoiceLibrary from './voiceLibrary/VoiceLibrary';
 import Svg, { Path } from 'react-native-svg';
@@ -14,14 +14,12 @@ const PremiumFeaturesList: React.FC<PremiumFeaturesListProps> = ({ isExpanded, t
 	const [isVoiceLibVisible, setVoiceLibVisible] = useState(false);
 	const rotation = isExpanded ? '180deg' : '0deg';
 
-	const styles = getStyles(isDarkMode);
+	const styles = createStyles(isDarkMode);
 
 	return (
-		<View style={styles.mainContainer}>
-			<TouchableOpacity style={styles.selectBoxCurrent} onPress={toggleExpand}>
-				<View style={styles.selectBoxValue}>
-					<ThemedText type="default" style={styles.title}>Премиум функции</ThemedText>
-				</View>
+		<View style={styles.container}>
+			<TouchableOpacity style={styles.header} onPress={toggleExpand}>
+				<ThemedText type="default" style={styles.title}>Премиум функции</ThemedText>
 				<Animated.View style={{ transform: [{ rotate: rotation }] }}>
 					<Svg width="20" height="20" viewBox="0 0 256 256">
 						<Path fill={isDarkMode ? '#ffffff' : '#000000'} d="M128,194.3L10,76.8l15.5-15.1L128,164.2L230.5,61.7L246,76.8L128,194.3z" />
@@ -29,47 +27,36 @@ const PremiumFeaturesList: React.FC<PremiumFeaturesListProps> = ({ isExpanded, t
 				</Animated.View>
 			</TouchableOpacity>
 			{isExpanded && (
-				<ScrollView style={styles.container}>
+				<View style={styles.content}>
 					<TouchableOpacity onPress={() => setVoiceLibVisible(true)} style={styles.subItem}>
 						<ThemedText type="default" style={styles.subItemText}>Библиотека голосов</ThemedText>
 					</TouchableOpacity>
-				</ScrollView>
-			)}
-
-			<Modal visible={isVoiceLibVisible} transparent animationType="fade" onRequestClose={() => setVoiceLibVisible(false)}>
-				<View style={styles.modalContainer}>
-					<VoiceLibrary isDarkMode={isDarkMode} isVisible={isVoiceLibVisible} onClose={() => setVoiceLibVisible(false)} />
 				</View>
-			</Modal>
+			)}
+			<VoiceLibrary isDarkMode={isDarkMode} isVisible={isVoiceLibVisible} onClose={() => setVoiceLibVisible(false)} />
 		</View>
 	);
 };
 
-const getStyles = (isDarkMode: boolean) => StyleSheet.create({
-	mainContainer: {
-		marginBottom: 15,
-	},
+const createStyles = (isDarkMode: boolean) => StyleSheet.create({
 	container: {
-		padding: 16,
+		marginBottom: 15,
 		backgroundColor: isDarkMode ? '#222222' : '#fafafa',
-		marginVertical: 10,
 		borderRadius: 10,
 		borderWidth: 1,
 		borderColor: isDarkMode ? '#333333' : '#dddddd',
 	},
-	selectBoxCurrent: {
+	content: {
+		padding: 16,
+	},
+	header: {
 		padding: 15,
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
-		borderWidth: 1,
-		borderColor: isDarkMode ? '#333333' : '#DDDDDD',
-		borderRadius: 8,
+		borderTopLeftRadius: 10,
+		borderTopRightRadius: 10,
 		backgroundColor: isDarkMode ? '#333333' : '#FFFFFF',
-	},
-	selectBoxValue: {
-		flexDirection: 'row',
-		alignItems: 'center',
 	},
 	title: {
 		color: isDarkMode ? '#ffffff' : '#333333',
@@ -81,12 +68,6 @@ const getStyles = (isDarkMode: boolean) => StyleSheet.create({
 	},
 	subItemText: {
 		color: isDarkMode ? '#ffffff' : '#333333',
-	},
-	modalContainer: {
-		flex: 1,
-		backgroundColor: '#00000099',
-		justifyContent: 'center',
-		alignItems: 'center',
 	},
 });
 

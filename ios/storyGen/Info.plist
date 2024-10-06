@@ -73,5 +73,7 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Это приложение требует доступ к микрофону для записи звука.</string>
   </dict>
 </plist>

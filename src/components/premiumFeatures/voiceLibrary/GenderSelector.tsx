@@ -4,7 +4,7 @@ import { ThemedText } from '../../ThemedText';
 
 type GenderSelectorProps = {
     isDarkMode: boolean;
-    gender: 'male' | 'female';
+    gender: string;
     onChange: (gender: 'male' | 'female') => void;
 };
 
@@ -42,6 +42,7 @@ const getStyles = (isDarkMode: boolean) =>
     StyleSheet.create({
         container: {
             paddingVertical: 10,
+            marginBottom: 20,
         },
         buttonsContainer: {
             flexDirection: 'row',
