@@ -6,61 +6,57 @@ import { resetStoryState } from '../store/reducers/StorySlice';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const extra = Constants.expoConfig?.extra || Constants.manifest?.extra;
+const extra = Constants.expoConfig?.extra || (Constants.manifest as any)?.extra;
 
 type GoogleLoginRequest = { idToken: string; accessToken: string };
-type RefreshTokenRequest = { refreshToken: string };
 
 const baseQuery = fetchBaseQuery({ 
-	baseUrl: extra?.API_URL,
-	prepareHeaders: (headers, { getState }) => {
-			const state = getState() as { auth: AuthState };
-			const token = state.auth.accessToken;
+  baseUrl: extra?.API_URL,
+  prepareHeaders: (headers, { getState }) => {
+    const state = getState() as { auth: AuthState };
+    const token = state.auth.accessToken;
 
-			if (token) {
-					headers.set('Authorization', `Bearer ${token}`);
-			}
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
 
-			return headers;
-	}
+    return headers;
+  }
 });
 
 export const authAPI = createApi({
-	reducerPath: 'authAPI',
-	baseQuery: baseQuery,
-	endpoints: (build) => ({
-		googleLogin: build.mutation<{ accessToken: string; refreshToken: string; user: { userId: string; email: string } }, GoogleLoginRequest>({
-			query: (body) => ({
-					url: '/auth/google',
-					method: 'POST',
-					body,
-			}),
-			async onQueryStarted(arg, { queryFulfilled, dispatch }) {
-					try {
-							const { data: response } = await queryFulfilled;
-							const { accessToken, refreshToken } = response;
-							const { userId, email } = response?.user;
+  reducerPath: 'authAPI',
+  baseQuery: baseQuery,
+  endpoints: (build) => ({
+    googleLogin: build.mutation<{ accessToken: string; user: { userId: string; email: string } }, GoogleLoginRequest>({
+      query: (body) => ({
+        url: '/auth/google',
+        method: 'POST',
+        body,
+      }),
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          const { data: response } = await queryFulfilled;
+          const { accessToken, user } = response;
+          const { userId, email } = user;
 
-							dispatch(resetStoryState());
-							
-							dispatch(login({ accessToken, refreshToken, userId, email }));
-							dispatch(clearSuccessMessage());
-							dispatch(setAuthError(''));
-	
-					} catch (error) {
-							console.error('Ошибка при логине через Google:', error);
-							dispatch(setAuthError('Ошибка при авторизации'));
-					}
-			},
-		}),
-		refreshToken: build.mutation<{ accessToken: string }, RefreshTokenRequest>({
-			query: (body) => ({
-				url: '/auth/refresh',
-				method: 'POST',
-				body,
-			}),
-		}),
-	}),
+          dispatch(resetStoryState());
+          dispatch(login({ accessToken, userId, email }));
+          dispatch(clearSuccessMessage());
+          dispatch(setAuthError(''));
+        } catch (error) {
+          console.error('Ошибка при логине через Google:', error);
+          dispatch(setAuthError('Ошибка при авторизации'));
+        }
+      },
+    }),
+    refreshToken: build.mutation<{ accessToken: string }, void>({
+      query: () => ({
+        url: '/auth/refresh',
+        method: 'POST',
+      }),
+    }),
+  }),
 });
 
 export const { useGoogleLoginMutation, useRefreshTokenMutation } = authAPI;

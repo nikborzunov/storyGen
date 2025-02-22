@@ -7,7 +7,7 @@ import { AuthState } from '../store/reducers/AuthSlice';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const extra = Constants.expoConfig?.extra || Constants.manifest?.extra;
+const extra = Constants.expoConfig?.extra || (Constants.manifest as any)?.extra;
 
 type IFetchStoryBody = {
 	themes: string[];
@@ -35,7 +35,7 @@ const baseQuery = fetchBaseQuery({
 	baseUrl: extra?.API_URL,
 	prepareHeaders: (headers, { getState }) => {
 			const state = getState() as { auth: AuthState };
-			const token = state.auth.accessToken;
+			const token = state.auth?.accessToken;
 
 			if (token) {
 					headers.set('Authorization', `Bearer ${token}`);

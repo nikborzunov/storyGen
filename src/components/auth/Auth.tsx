@@ -40,7 +40,7 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
   const getBackgroundColor = useCallback(() => {
     if (modalVisible || isAuthModalOpen) return '#6c757d';
     return isDarkMode ? '#0056b3' : '#007bff';
-  }, [modalVisible, route.params?.isAuthModalOpen, isDarkMode]);
+  }, [modalVisible, isAuthModalOpen, isDarkMode]);
 
   useEffect(() => {
     const updateToken = async () => {
@@ -75,16 +75,15 @@ const Auth: React.FC<{ isDarkMode: boolean }> = ({ isDarkMode }) => {
     try {
       const userResponse: UserResponse = await login({ idToken, accessToken }).unwrap();
   
-      const { accessToken: newAccessToken, refreshToken, user } = userResponse;
+      const { accessToken: newAccessToken, user } = userResponse;
       const { userId, email } = user;
   
       if (!newAccessToken || !userId || !email) {
         throw new Error('Нет токена доступа, userId или email');
       }
   
-      await Keychain.setGenericPassword(newAccessToken, refreshToken);
-  
-      dispatch(authSlice.actions.login({ accessToken: newAccessToken, refreshToken, userId, email }));
+      await Keychain.setGenericPassword(newAccessToken, '');
+      dispatch(authSlice.actions.login({ accessToken: newAccessToken, userId, email }));
   
       setModalVisible(false);
     } catch (error) {

@@ -10,22 +10,13 @@ const useAuth = () => {
   const [refreshTokenMutation] = useRefreshTokenMutation();
 
   const refreshAccessToken = async () => {
-    const credentials = await Keychain.getGenericPassword();
-
-    if (credentials) {
-      const refreshTokenValue = credentials.password;
-
-      try {
-        const result = await refreshTokenMutation({ refreshToken: refreshTokenValue }).unwrap();
-
-        await Keychain.setGenericPassword(result.accessToken, refreshTokenValue);
-        return result.accessToken;
-      } catch (error) {
-        console.error('Ошибка обновления токена:', error);
-        handleLogout();
-      }
-    } else {
-      console.warn('Учетные данные не найдены.');
+    try {
+      const result = await refreshTokenMutation().unwrap();
+      await Keychain.setGenericPassword(result.accessToken, '');
+      return result.accessToken;
+    } catch (error) {
+      console.error('Ошибка обновления токена:', error);
+      handleLogout();
     }
   };
 
@@ -37,11 +28,10 @@ const useAuth = () => {
 
       try {
         const decodedToken = jwtDecode(accessToken);
-
         const currentTime = Date.now() / 1000;
         if (decodedToken.exp && decodedToken.exp < currentTime) {
           return await refreshAccessToken();
-        };
+        }
       } catch (error) {
         console.error('Ошибка декодирования токена:', error);
         handleLogout();
@@ -49,7 +39,6 @@ const useAuth = () => {
     } else {
       console.warn('Учетные данные не найдены при проверке истечения токена.');
     }
-    return null;
   };
 
   const handleLogout = async () => {

@@ -13,8 +13,13 @@ import { VoiceLibraryProps } from '@/src/typing/voice';
 import { selectOptionsVoiceRoles } from '@/src/constants/voiceLibrary';
 import useAudioRecorder from '@/src/hooks/useAudioRecorder';
 import { TextInput } from 'react-native';
+import { useAddVoiceMutation } from '@/src/services/VoiceService';
+import { useSelector } from 'react-redux';
+import { selectVoices } from '@/src/store/reducers/VoiceLibrarySlice';
+import VoiceLibraryList from './VoiceLibraryList';
 
 const VoiceLibrary: React.FC<VoiceLibraryProps> = ({ isDarkMode, isVisible, onClose }) => {
+    const voices = useSelector(selectVoices);
     const [formData, setFormData] = useState({
         name: '',
         gender: '',
@@ -22,6 +27,7 @@ const VoiceLibrary: React.FC<VoiceLibraryProps> = ({ isDarkMode, isVisible, onCl
         selectedRole: '',
     });
     const textInputRef = useRef<TextInput>(null);
+    const [addVoice, { isLoading }] = useAddVoiceMutation();
     const {
         soundUri,
         isPlaying,
@@ -34,14 +40,6 @@ const VoiceLibrary: React.FC<VoiceLibraryProps> = ({ isDarkMode, isVisible, onCl
     
     const [recordingNotificationVisible, setRecordingNotificationVisible] = useState(false);
     const opacityAnim = useRef(new Animated.Value(0)).current;
-
-    const handleInputChange = (field: keyof typeof formData) => (value: string) => {
-        setFormData({ ...formData, [field]: value });
-    };
-
-    const handleRoleSelect = (selectedRole: { value: string }) => {
-        setFormData({ ...formData, selectedRole: selectedRole.value });
-    };
 
     useEffect(() => {
         if (isVisible && textInputRef.current) {
@@ -68,6 +66,65 @@ const VoiceLibrary: React.FC<VoiceLibraryProps> = ({ isDarkMode, isVisible, onCl
         }
     }, [isRecording, opacityAnim]);
 
+    const handleInputChange = (field: keyof typeof formData) => (value: string) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleRoleSelect = (selectedRole: { name: string; value: string }) => {
+        setFormData(prev => ({ ...prev, selectedRole: selectedRole.value }));
+    };
+
+    const handleSave = async () => {
+        if (!soundUri) {
+            console.error('Аудиофайл не записан. Проверьте, была ли запись завершена.');
+            return;
+        }
+    
+        try {
+            const audioBlob = await fetch(soundUri).then((r) => r.blob());
+            
+            if (audioBlob.size > 5 * 1024 * 1024) {
+                console.error('Размер файла превышает лимит в 5 МБ.');
+                return;
+            }
+    
+            const audiofile = new File([audioBlob], "audiofile.mp3", {
+                type: "audio/mp3",
+            });
+    
+            if (audioBlob.size === 0) {
+                console.error('Полученный файл пустой. Убедитесь, что запись прошла успешно.');
+                return;
+            }
+    
+            const selectedRoleKey = selectOptionsVoiceRoles.find(role => role.value === formData.selectedRole)?.key;
+     
+            const fd = new FormData();
+            fd.append("voiceSampleAudio", audiofile, "audio/mpeg");
+            fd.append('role', selectedRoleKey || '');
+            fd.append('name', formData.name);
+            fd.append('gender', formData.gender);
+            fd.append('age', formData.age);
+
+
+            // Логирование содержимого FormData
+            for (let i = 0; i < fd._parts.length; i++) {
+                const [key, value] = fd._parts[i]; // Получаем ключ и значение из _parts
+                if (value instanceof File) {
+                    console.log(`Key: ${key}, File Name: ${value.name}, Type: ${value.type}, Size: ${value.size} bytes`);
+                } else {
+                    console.log(`Key: ${key}, Value:`, value);
+                }
+            }
+     
+            await addVoice(fd).unwrap();
+            console.log('Голос успешно добавлен.');
+            onClose();
+        } catch (error) {
+            console.error('Ошибка при добавлении голоса VoiceLibraryComponent:', error);
+        }
+    };
+
     const styles = createStyles(isDarkMode);
 
     return (
@@ -84,7 +141,7 @@ const VoiceLibrary: React.FC<VoiceLibraryProps> = ({ isDarkMode, isVisible, onCl
                 <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
                     <ThemedText type="title" style={styles.headerTitle}>Добавьте новый голос</ThemedText>
                     <SelectBox
-                        title={formData.selectedRole || "Кто это?"}
+                        title={formData.selectedRole ? selectOptionsVoiceRoles.find(role => role.value === formData.selectedRole)?.name : "Кто это?"}
                         options={selectOptionsVoiceRoles}
                         selected={formData.selectedRole ? { name: formData.selectedRole, value: formData.selectedRole } : null}
                         onSelect={handleRoleSelect}
@@ -111,10 +168,13 @@ const VoiceLibrary: React.FC<VoiceLibraryProps> = ({ isDarkMode, isVisible, onCl
                         recordingNotificationVisible={recordingNotificationVisible}
                         opacityAnim={opacityAnim}
                     />
-                    <TouchableOpacity style={styles.saveButton}>
+                    <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={isLoading}>
                         <ThemedText type="default" style={styles.saveButtonText}>Сохранить</ThemedText>
                     </TouchableOpacity>
                 </ScrollView>
+
+                {voices && <VoiceLibraryList voices={voices} />}
+
                 <TouchableOpacity style={styles.closeButton}>
                     <CloseButton isDarkMode={isDarkMode} onPress={onClose} />
                 </TouchableOpacity>
